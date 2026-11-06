@@ -1,4 +1,4 @@
-import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from 'react'
+import { createContext, useCallback, useContext, useEffect, useRef, useState, type ReactNode } from 'react'
 import type { Session } from '@supabase/supabase-js'
 import { supabase } from './supabase'
 import type { Profile } from './types'
@@ -20,6 +20,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null)
   const [profile, setProfile] = useState<Profile | null>(null)
   const [loading, setLoading] = useState(true)
+  // usuario de la sesión vigente: descarta respuestas de perfil que llegan tarde de una sesión anterior
+  const currentUser = useRef<string | null>(null)
 
   const loadProfile = useCallback(async (s: Session | null) => {
     if (!s) {
@@ -27,6 +29,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return
     }
     const { data } = await supabase.from('profiles').select('*').eq('id', s.user.id).maybeSingle()
+    if (currentUser.current !== s.user.id) return
     setProfile((data as Profile) ?? null)
   }, [])
 
@@ -34,11 +37,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     let mounted = true
     supabase.auth.getSession().then(async ({ data }) => {
       if (!mounted) return
+      currentUser.current = data.session?.user.id ?? null
       setSession(data.session)
       await loadProfile(data.session)
       setLoading(false)
     })
     const { data: sub } = supabase.auth.onAuthStateChange((event, s) => {
+      currentUser.current = s?.user.id ?? null
       setSession(s)
       if (event === 'SIGNED_IN' || event === 'SIGNED_OUT' || event === 'USER_UPDATED') {
         // si cambió el usuario, se descarta el perfil anterior para no redirigir con el rol equivocado
