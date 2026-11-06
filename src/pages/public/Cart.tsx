@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { errMsg, imageUrl, supabase } from '../../lib/supabase'
+import { appUrl, errMsg, imageUrl, supabase } from '../../lib/supabase'
 import { useAuth } from '../../lib/auth'
 import { useCart } from '../../lib/cart'
 import { addDays, fmtMoney, fmtNum, toISODate } from '../../lib/format'
@@ -29,7 +29,7 @@ export default function Cart() {
     }
     const order = data as { id: string }
     // aviso por mail al dueño (si falla, el pedido igual quedó guardado)
-    supabase.functions.invoke('notify-order', { body: { order_id: order.id } }).catch(() => {})
+    supabase.functions.invoke('notify-order', { body: { order_id: order.id, site: appUrl() } }).catch(() => {})
     cart.clear()
     nav(`/pedido/${order.id}?nuevo=1`)
   }

@@ -5,6 +5,11 @@ const key = import.meta.env.VITE_SUPABASE_KEY as string
 
 export const supabase = createClient(url, key)
 
+/** URL absoluta dentro de la app (respeta la subcarpeta si la hay) */
+export function appUrl(path = '') {
+  return window.location.origin + import.meta.env.BASE_URL.replace(/\/$/, '') + path
+}
+
 export const IMAGES_BUCKET = 'product-images'
 
 export function imageUrl(path?: string | null) {

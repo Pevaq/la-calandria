@@ -11,7 +11,7 @@ Web para clientes mayoristas + back office para el dueño + vista "Mis tareas" p
 | Pieza | Servicio |
 |---|---|
 | Base de datos, usuarios, fotos, funciones | Supabase (proyecto `la-calandria`, región São Paulo) |
-| Web (React + Vite + Tailwind) | Cloudflare Pages (o cualquier hosting estático) |
+| Web (React + Vite + Tailwind) | GitHub Pages (o Cloudflare Pages / cualquier hosting estático) |
 | Mails de pedido nuevo | Resend |
 
 La lógica importante vive en la base (Postgres) y está protegida por rol:
@@ -31,7 +31,9 @@ El archivo `.env` ya apunta al proyecto de Supabase (la clave publicable es púb
 
 ## Puesta en marcha (una sola vez)
 
-1. **Publicar la web** en Cloudflare Pages: conectar este repo, comando de build `npm run build`, carpeta `dist`. El archivo `public/_redirects` ya hace que funcionen las rutas.
+1. **Publicar la web**, con cualquiera de estas dos opciones:
+   - **GitHub Pages** (lo que usamos hoy): en el repo, Settings → Pages → *Source: GitHub Actions*. El workflow `.github/workflows/pages.yml` publica solo en cada push a `main`, en `https://pevaq.github.io/la-calandria/`.
+   - **Cloudflare Pages**: conectar el repo, build `npm run build`, carpeta `dist` (el archivo `public/_redirects` ya resuelve las rutas).
 2. **Supabase → Authentication → URL Configuration**: poner la URL publicada como *Site URL* (para los links de los mails de contraseña).
 3. **Supabase → Authentication → Sign In / Providers → Email**: desactivar *Confirm email*. El dueño ya habilita a cada cliente a mano, y el servidor de mail gratuito de Supabase sólo manda a los miembros del equipo, así que con la confirmación activada los clientes no podrían terminar el registro. (Alternativa: configurar Resend como SMTP propio.)
 4. **Mails de pedido nuevo**: crear una cuenta en resend.com **con el mail del dueño**, generar una API key y cargarla en Supabase → Edge Functions → Secrets como `RESEND_API_KEY`. En la app, Configuración → "Email donde llegan los pedidos nuevos" con ese mismo mail. (Con dominio propio verificado en Resend se puede mandar a cualquier dirección y definir `MAIL_FROM`.)

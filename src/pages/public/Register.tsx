@@ -1,6 +1,6 @@
 import { useState, type FormEvent } from 'react'
 import { Link } from 'react-router-dom'
-import { errMsg, supabase } from '../../lib/supabase'
+import { appUrl, errMsg, supabase } from '../../lib/supabase'
 import { Alert, Button, Field } from '../../components/ui'
 
 export default function Register() {
@@ -18,7 +18,7 @@ export default function Register() {
     const { data, error } = await supabase.auth.signUp({
       email: email.trim(),
       password,
-      options: { data: meta, emailRedirectTo: window.location.origin + '/ingresar' },
+      options: { data: meta, emailRedirectTo: appUrl('/ingresar') },
     })
     setBusy(false)
     if (error) return setError(errMsg(error))

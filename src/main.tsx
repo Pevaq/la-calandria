@@ -8,7 +8,7 @@ import { CartProvider } from './lib/cart.tsx'
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <BrowserRouter>
+    <BrowserRouter basename={import.meta.env.BASE_URL.replace(/\/$/, '')}>
       <AuthProvider>
         <CartProvider>
           <App />

@@ -1,6 +1,6 @@
 import { useEffect, useState, type FormEvent } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
-import { errMsg, supabase } from '../../lib/supabase'
+import { appUrl, errMsg, supabase } from '../../lib/supabase'
 import { homeFor, useAuth } from '../../lib/auth'
 import { Alert, Button, Field } from '../../components/ui'
 
@@ -30,7 +30,7 @@ export default function Login() {
 
   const reset = async () => {
     if (!email) return setError('Escribí tu email y volvé a tocar "Olvidé mi contraseña"')
-    const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), { redirectTo: window.location.origin + '/ingresar' })
+    const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), { redirectTo: appUrl('/ingresar') })
     if (error) setError(errMsg(error))
     else setInfo('Te mandamos un mail para cambiar la contraseña.')
   }

@@ -17,7 +17,7 @@ const esc = (s: string) => s.replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&l
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: cors })
   try {
-    const { order_id } = await req.json()
+    const { order_id, site: siteFromApp } = await req.json()
     if (!order_id) return json({ error: 'Falta order_id' }, 400)
 
     const url = Deno.env.get('SUPABASE_URL')!
@@ -43,7 +43,9 @@ Deno.serve(async (req) => {
     const key = Deno.env.get('RESEND_API_KEY')
     if (!to || !key) return json({ skipped: true, reason: !to ? 'Sin email de aviso configurado' : 'Sin RESEND_API_KEY' })
 
-    const site = req.headers.get('origin') ?? ''
+    // el link del mail apunta a la app (con su subcarpeta), sólo si es del mismo dominio desde donde se pidió
+    const origin = req.headers.get('origin') ?? ''
+    const site = (origin && typeof siteFromApp === 'string' && siteFromApp.startsWith(origin) ? siteFromApp : origin).replace(/\/$/, '')
     const rows = (items ?? [])
       .map(
         (i: { product_name: string; variant_label: string; quantity: number; unit_price: number }) =>
