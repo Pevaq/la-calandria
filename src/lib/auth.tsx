@@ -41,6 +41,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const { data: sub } = supabase.auth.onAuthStateChange((event, s) => {
       setSession(s)
       if (event === 'SIGNED_IN' || event === 'SIGNED_OUT' || event === 'USER_UPDATED') {
+        // si cambió el usuario, se descarta el perfil anterior para no redirigir con el rol equivocado
+        setProfile((prev) => (prev && prev.id === s?.user.id ? prev : null))
         // diferido para no bloquear el callback de auth
         setTimeout(() => loadProfile(s), 0)
       }

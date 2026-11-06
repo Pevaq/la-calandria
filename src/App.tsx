@@ -7,6 +7,8 @@ import Register from './pages/public/Register'
 import Cart from './pages/public/Cart'
 import OrderView from './pages/public/OrderView'
 import MyOrders from './pages/public/MyOrders'
+import Demo from './pages/public/Demo'
+import { DEMO_LOGIN } from './lib/demo'
 import Orders from './pages/admin/Orders'
 import OrderDetail from './pages/admin/OrderDetail'
 import Products from './pages/admin/Products'
@@ -25,6 +27,7 @@ export default function App() {
         <Route path="p/:slug" element={<ProductPage />} />
         <Route path="ingresar" element={<Login />} />
         <Route path="registro" element={<Register />} />
+        {DEMO_LOGIN && <Route path="demo" element={<Demo />} />}
         <Route path="pedido" element={<Cart />} />
         <Route path="pedido/:id" element={<RequireRole roles={['client', 'admin', 'worker']}><OrderView /></RequireRole>} />
         <Route path="mis-pedidos" element={<RequireRole roles={['client', 'admin', 'worker']}><MyOrders /></RequireRole>} />

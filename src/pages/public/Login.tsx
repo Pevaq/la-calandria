@@ -3,6 +3,8 @@ import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { appUrl, errMsg, supabase } from '../../lib/supabase'
 import { homeFor, useAuth } from '../../lib/auth'
 import { Alert, Button, Field } from '../../components/ui'
+import DemoLogin from '../../components/DemoLogin'
+import { DEMO_LOGIN } from '../../lib/demo'
 
 export default function Login() {
   const { profile } = useAuth()
@@ -36,8 +38,16 @@ export default function Login() {
   }
 
   return (
-    <div className="mx-auto max-w-sm py-6">
-      <h1 className="mb-6 font-display text-3xl font-semibold">Ingresar</h1>
+    <div className={`mx-auto py-6 ${DEMO_LOGIN ? "max-w-2xl" : "max-w-sm"}`}>
+      {DEMO_LOGIN && (
+        <div className="mb-8">
+          <h1 className="mb-1 font-display text-3xl font-semibold">Entrar como…</h1>
+          <p className="mb-4 text-sm text-stone-600">Modo prueba: tocá un usuario y entrás directo.</p>
+          <DemoLogin />
+          <div className="mt-6 border-t border-stone-200 pt-6 text-sm text-stone-500">O con email y contraseña:</div>
+        </div>
+      )}
+      <h1 className={`mb-6 font-display text-3xl font-semibold ${DEMO_LOGIN ? 'hidden' : ''}`}>Ingresar</h1>
       <form onSubmit={submit} className="card space-y-4 p-6">
         {error && <Alert>{error}</Alert>}
         {info && <Alert kind="success">{info}</Alert>}

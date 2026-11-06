@@ -5,6 +5,7 @@ import { useCart } from '../lib/cart'
 import { supabase } from '../lib/supabase'
 import { personName } from '../lib/data'
 import { BottomNav, Icon, Logo, Modal, Spinner } from './ui'
+import { DEMO_LOGIN } from '../lib/demo'
 
 /* ------------------------------------------------------------------ */
 /* Público (clientes)                                                   */
@@ -31,12 +32,16 @@ export function PublicLayout() {
             <Link to="/pedido" className="rounded-lg bg-brand-700 px-3 py-1.5 font-medium text-white hover:bg-brand-800">
               Pedido{count > 0 && <span className="ml-1.5 rounded-full bg-cream-100 px-1.5 text-xs text-brand-800">{count}</span>}
             </Link>
+            {DEMO_LOGIN && <Link to="/demo" className="rounded-md bg-leather-500 px-2.5 py-1.5 text-white">Cambiar usuario</Link>}
             {profile ? (
               <button onClick={signOut} className="rounded-md px-2 py-1.5 text-stone-500 hover:text-stone-900">Salir</button>
             ) : (
               <Link to="/ingresar" className="rounded-md px-2 py-1.5 text-stone-600 hover:text-stone-900">Ingresar</Link>
             )}
           </nav>
+          {DEMO_LOGIN && !profile && !['/ingresar', '/demo'].includes(loc.pathname) && (
+            <Link to="/demo" className="rounded-lg bg-leather-500 px-3 py-1.5 text-sm font-medium text-white lg:hidden">Entrar como…</Link>
+          )}
           {/* celular: acceso rápido al panel para el personal */}
           {isStaff && (
             <Link to={homeFor(profile)} className="rounded-lg bg-brand-700 px-3 py-1.5 text-sm font-medium text-white lg:hidden">Panel</Link>
@@ -69,6 +74,11 @@ export function PublicLayout() {
             <div className="font-medium">{profile?.company || personName(profile)}</div>
             <div className="text-sm text-stone-500">{profile?.email}</div>
           </div>
+          {DEMO_LOGIN && (
+            <Link to="/demo" className="flex w-full items-center gap-3 rounded-xl border border-leather-500/40 bg-cream-100 px-4 py-3 text-left font-medium text-brand-900">
+              <Icon name="team" /> Cambiar de usuario (prueba)
+            </Link>
+          )}
           <button
             onClick={async () => { await signOut(); setAccount(false); nav('/') }}
             className="flex w-full items-center gap-3 rounded-xl border border-stone-200 px-4 py-3 text-left text-red-700"
@@ -138,11 +148,16 @@ function StaffShell({ children }: { children: ReactNode }) {
       {/* celular: barra superior */}
       <div className="sticky top-0 z-30 flex items-center justify-between bg-brand-900 px-4 py-3 lg:hidden">
         <Logo light />
-        {!isAdmin && (
-          <button onClick={signOut} className="flex items-center gap-1.5 text-sm text-cream-100/80">
-            <Icon name="logout" className="h-4 w-4" /> Salir
-          </button>
-        )}
+        <div className="flex items-center gap-3">
+          {DEMO_LOGIN && (
+            <Link to="/demo" className="rounded-lg bg-leather-500 px-2.5 py-1 text-xs font-medium text-white">Cambiar usuario</Link>
+          )}
+          {!isAdmin && (
+            <button onClick={signOut} className="flex items-center gap-1.5 text-sm text-cream-100/80">
+              <Icon name="logout" className="h-4 w-4" /> Salir
+            </button>
+          )}
+        </div>
       </div>
 
       {/* escritorio: barra lateral */}
@@ -161,6 +176,9 @@ function StaffShell({ children }: { children: ReactNode }) {
             <div className="truncate text-cream-100">{personName(profile)}</div>
             <div className="mb-2">{isAdmin ? 'Administrador' : 'Trabajador'}</div>
             <button onClick={signOut} className="text-cream-100/80 underline hover:text-white">Cerrar sesión</button>
+            {DEMO_LOGIN && (
+              <Link to="/demo" className="mt-3 block rounded-lg bg-leather-500 px-3 py-2 text-center font-medium text-white">Cambiar usuario (prueba)</Link>
+            )}
           </div>
         </div>
       </aside>
