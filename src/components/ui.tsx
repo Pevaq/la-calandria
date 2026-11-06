@@ -144,14 +144,15 @@ export function Tabs<T extends string>({ tabs, value, onChange }: { tabs: { id: 
   )
 }
 
+export const BIRD_URL = `${import.meta.env.BASE_URL}ave.png`
+
 export function Logo({ light }: { light?: boolean }) {
   return (
-    <span className="flex items-center gap-2">
-      <svg viewBox="0 0 64 64" className="h-8 w-8" aria-hidden>
-        <rect width="64" height="64" rx="14" fill={light ? '#f3ead8' : '#2f4a32'} />
-        <path d="M18 40c4-10 14-17 26-18-3 3-5 6-6 10 5 0 9 2 12 5-8 0-14 3-18 8-5-4-9-5-14-5z" fill={light ? '#2f4a32' : '#f3ead8'} />
-      </svg>
-      <span className={`font-display text-lg font-semibold tracking-tight ${light ? 'text-cream-100' : 'text-brand-800'}`}>La Calandria</span>
+    <span className="flex items-center gap-2.5">
+      <span className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full ${light ? 'bg-cream-100/10 ring-1 ring-cream-100/30' : 'bg-brand-800'}`}>
+        <img src={BIRD_URL} alt="" className="h-7 w-7" />
+      </span>
+      <span className={`font-display text-xl leading-none tracking-wide ${light ? 'text-cream-100' : 'text-brand-800'}`}>La Calandria</span>
     </span>
   )
 }

@@ -5,7 +5,7 @@ import { useAuth } from '../../lib/auth'
 import { useCart } from '../../lib/cart'
 import { fmtMoney, fmtNum } from '../../lib/format'
 import type { Attribute, AttrOption, Product, ProductImage, Variant } from '../../lib/types'
-import { Alert, Button, Spinner } from '../../components/ui'
+import { Alert, BIRD_URL, Button, Spinner } from '../../components/ui'
 
 export default function ProductPage() {
   const { slug } = useParams()
@@ -84,7 +84,7 @@ export default function ProductPage() {
           {mainImg ? (
             <img src={imageUrl(mainImg.path)!} alt={product.name} className="h-full w-full object-cover" />
           ) : (
-            <div className="flex h-full items-center justify-center font-display text-6xl text-cream-200">LC</div>
+            <div className="flex h-full items-center justify-center bg-brand-800"><img src={BIRD_URL} alt="" className="h-1/2 w-1/2 opacity-80" /></div>
           )}
         </div>
         {images.length > 1 && (

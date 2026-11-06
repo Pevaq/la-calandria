@@ -4,7 +4,7 @@ import { imageUrl, supabase } from '../../lib/supabase'
 import { useAuth } from '../../lib/auth'
 import { fmtMoney } from '../../lib/format'
 import type { Product, ProductImage, Variant } from '../../lib/types'
-import { Alert, Empty, Spinner } from '../../components/ui'
+import { Alert, BIRD_URL, Empty, Spinner } from '../../components/ui'
 
 export default function Catalog() {
   const { canBuy, profile } = useAuth()
@@ -38,14 +38,15 @@ export default function Catalog() {
 
   return (
     <div>
-      <section className="mb-10 overflow-hidden rounded-2xl bg-brand-800 px-6 py-10 text-cream-100 sm:px-10 sm:py-14">
-        <p className="mb-2 text-xs font-medium uppercase tracking-[0.2em] text-cream-200/80">Venta mayorista</p>
-        <h1 className="max-w-2xl font-display text-3xl font-semibold leading-tight sm:text-5xl">Bombillas y productos para el mate, hechos a mano.</h1>
-        <p className="mt-4 max-w-xl text-cream-100/80">
+      <section className="relative mb-8 overflow-hidden rounded-2xl bg-brand-800 px-6 py-9 text-cream-100 sm:mb-10 sm:px-10 sm:py-14">
+        <img src={BIRD_URL} alt="" aria-hidden className="pointer-events-none absolute -bottom-10 -right-10 h-56 w-56 opacity-15 sm:h-80 sm:w-80" />
+        <p className="relative mb-3 text-xs font-medium uppercase tracking-[0.2em] text-leather-500">Venta mayorista</p>
+        <h1 className="relative max-w-2xl font-display text-3xl leading-tight sm:text-5xl">Bombillas y productos para el mate, hechos a mano.</h1>
+        <p className="relative mt-4 max-w-xl text-cream-100/80">
           Elegí modelos y cantidades, mandanos el pedido y te confirmamos la fecha de entrega.
         </p>
         {!profile && (
-          <div className="mt-6 flex flex-wrap gap-3">
+          <div className="relative mt-6 flex flex-wrap gap-3">
             <Link to="/registro" className="rounded-lg bg-cream-100 px-4 py-2 text-sm font-medium text-brand-900 hover:bg-white">
               Crear cuenta mayorista
             </Link>
@@ -92,7 +93,7 @@ export default function Catalog() {
                   {img ? (
                     <img src={imageUrl(img.path)!} alt={p.name} className="h-full w-full object-cover transition duration-300 group-hover:scale-105" loading="lazy" />
                   ) : (
-                    <div className="flex h-full items-center justify-center font-display text-4xl text-cream-200">LC</div>
+                    <div className="flex h-full items-center justify-center bg-brand-800"><img src={BIRD_URL} alt="" className="h-1/2 w-1/2 opacity-80" /></div>
                   )}
                 </div>
                 <div className="mt-2">
