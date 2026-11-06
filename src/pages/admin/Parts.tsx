@@ -3,7 +3,7 @@ import { errMsg, supabase } from '../../lib/supabase'
 import { fmtDate, fmtNum } from '../../lib/format'
 import { personName, useStaff } from '../../lib/data'
 import type { Part, PartProcess, Product, ProductPart } from '../../lib/types'
-import { Alert, Button, Empty, PageHeader, Spinner, Tabs } from '../../components/ui'
+import { Alert, Button, Empty, Icon, PageHeader, Spinner, Tabs } from '../../components/ui'
 import StockAdjustModal, { type StockTarget } from './StockAdjustModal'
 
 interface Movement {
@@ -68,15 +68,15 @@ export default function Parts() {
 
   return (
     <div className="max-w-5xl">
-      <PageHeader title="Partes y stock" subtitle="Cada parte tiene su ruta de fabricación con un responsable fijo. Las tareas de cada pedido se asignan solas según esto." />
+      <PageHeader title="Partes y stock" subtitle="Cada parte tiene su ruta de fabricación con un responsable fijo." />
       {error && <div className="mb-4"><Alert>{error}</Alert></div>}
       <Tabs value={tab} onChange={setTab} tabs={[{ id: 'partes', label: 'Partes' }, { id: 'movimientos', label: 'Movimientos de stock' }]} />
 
       {tab === 'partes' && (
         <div className="space-y-4">
           <div className="flex gap-2">
-            <input className="input max-w-xs" placeholder="Nueva parte (ej: Palo, Pico, Filtro)" value={newName} onChange={(e) => setNewName(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && addPart()} />
-            <Button onClick={addPart}>+ Agregar</Button>
+            <input className="input sm:max-w-xs" placeholder="Nueva parte (ej: Palo, Pico, Filtro)" value={newName} onChange={(e) => setNewName(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && addPart()} />
+            <Button onClick={addPart} className="shrink-0">+ Agregar</Button>
           </div>
           {parts.length === 0 ? (
             <Empty>Sin partes. Las podés crear acá o desde la pestaña Partes de un producto.</Empty>
@@ -159,32 +159,39 @@ function PartRoute({ part, route, staff, op }: { part: Part; route: PartProcess[
       </div>
       <div className="text-xs font-medium uppercase tracking-wide text-stone-500">Ruta de fabricación</div>
       {route.length > 0 && (
-        <div className="overflow-x-auto rounded-lg border border-stone-200 bg-white">
-          <table className="w-full min-w-[560px]">
-            <thead><tr><th className="th w-16">Paso</th><th className="th">Proceso</th><th className="th">Responsable</th><th className="th w-20">Días</th><th className="th" /></tr></thead>
-            <tbody className="divide-y divide-stone-100">
-              {route.map((r) => (
-                <tr key={r.id}>
-                  <td className="td"><input type="number" min={1} className="input py-1" defaultValue={r.step_order} onBlur={(e) => +e.target.value !== r.step_order && upd(r, { step_order: Math.max(1, +e.target.value || 1) })} /></td>
-                  <td className="td"><input className="input py-1" defaultValue={r.name} onBlur={(e) => e.target.value.trim() && e.target.value !== r.name && upd(r, { name: e.target.value.trim() })} /></td>
-                  <td className="td">
-                    <select className={`input py-1 ${!r.assignee_id ? 'border-amber-300 bg-amber-50' : ''}`} value={r.assignee_id ?? ''} onChange={(e) => upd(r, { assignee_id: e.target.value || null })}>
-                      <option value="">Sin asignar</option>
-                      {staff.map((s) => <option key={s.id} value={s.id}>{personName(s)}</option>)}
-                    </select>
-                  </td>
-                  <td className="td"><input type="number" min={0} className="input py-1" defaultValue={r.lead_days} onBlur={(e) => +e.target.value !== r.lead_days && upd(r, { lead_days: Math.max(0, +e.target.value || 0) })} /></td>
-                  <td className="td text-right"><button className="text-xs text-red-600 hover:underline" onClick={() => op(() => supabase.from('part_processes').delete().eq('id', r.id))}>Quitar</button></td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+        <ol className="space-y-2">
+          {route.map((r) => (
+            <li key={r.id} className="space-y-2 rounded-lg border border-stone-200 bg-white p-3">
+              <div className="flex items-center gap-2">
+                <label className="flex shrink-0 items-center gap-1 text-xs text-stone-500">
+                  Paso
+                  <input type="number" min={1} className="input w-14 px-2 text-center" defaultValue={r.step_order} onBlur={(e) => +e.target.value !== r.step_order && upd(r, { step_order: Math.max(1, +e.target.value || 1) })} />
+                </label>
+                <input className="input font-medium" aria-label="Proceso" defaultValue={r.name} onBlur={(e) => e.target.value.trim() && e.target.value !== r.name && upd(r, { name: e.target.value.trim() })} />
+                <button className="shrink-0 p-1 text-red-600" aria-label="Quitar proceso" onClick={() => op(() => supabase.from('part_processes').delete().eq('id', r.id))}><Icon name="trash" /></button>
+              </div>
+              <div className="grid grid-cols-[1fr_5rem] gap-2">
+                <label className="block">
+                  <span className="label">Responsable</span>
+                  <select className={`input ${!r.assignee_id ? 'border-amber-300 bg-amber-50' : ''}`} value={r.assignee_id ?? ''} onChange={(e) => upd(r, { assignee_id: e.target.value || null })}>
+                    <option value="">Sin asignar</option>
+                    {staff.map((s) => <option key={s.id} value={s.id}>{personName(s)}</option>)}
+                  </select>
+                </label>
+                <label className="block">
+                  <span className="label">Días</span>
+                  <input type="number" min={0} className="input" defaultValue={r.lead_days} onBlur={(e) => +e.target.value !== r.lead_days && upd(r, { lead_days: Math.max(0, +e.target.value || 0) })} />
+                </label>
+              </div>
+            </li>
+          ))}
+        </ol>
       )}
-      <div className="flex flex-wrap gap-2">
-        <input className="input max-w-xs" placeholder="Nuevo proceso (ej: Corte, Pulido)" value={name} onChange={(e) => setName(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && add()} />
-        <Button variant="secondary" onClick={add}>+ Proceso</Button>
-        <div className="flex-1" />
+      <div className="flex gap-2">
+        <input className="input sm:max-w-xs" placeholder="Nuevo proceso (ej: Corte, Pulido)" value={name} onChange={(e) => setName(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && add()} />
+        <Button variant="secondary" onClick={add} className="shrink-0">+ Proceso</Button>
+      </div>
+      <div className="flex justify-end">
         <Button variant="danger" size="sm" onClick={() => confirm(`¿Borrar la parte "${part.name}"?`) && op(() => supabase.from('parts').delete().eq('id', part.id))}>Borrar parte</Button>
       </div>
     </div>

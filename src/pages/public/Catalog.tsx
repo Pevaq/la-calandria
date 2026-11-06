@@ -14,17 +14,23 @@ export default function Catalog() {
   const [cat, setCat] = useState<string>('')
 
   useEffect(() => {
+    let alive = true
     ;(async () => {
       const { data: p } = await supabase.from('products').select('*').eq('published', true).order('sort').order('name')
       const ids = (p ?? []).map((x) => x.id)
       const { data: im } = ids.length ? await supabase.from('product_images').select('*').in('product_id', ids).order('sort') : { data: [] }
+      if (!alive) return
       setImages((im as ProductImage[]) ?? [])
       if (canBuy && ids.length) {
         const { data: v } = await supabase.from('variants').select('*').in('product_id', ids).eq('active', true)
+        if (!alive) return
         setVariants((v as Variant[]) ?? [])
       }
       setProducts((p as Product[]) ?? [])
     })()
+    return () => {
+      alive = false
+    }
   }, [canBuy])
 
   const categories = useMemo(() => [...new Set((products ?? []).map((p) => p.category).filter(Boolean))] as string[], [products])

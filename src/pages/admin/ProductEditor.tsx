@@ -4,7 +4,7 @@ import { errMsg, IMAGES_BUCKET, imageUrl, supabase } from '../../lib/supabase'
 import { fmtNum, slugify } from '../../lib/format'
 import { personName, useStaff } from '../../lib/data'
 import type { Attribute, AttrOption, Part, PartProcess, Product, ProductImage, ProductPart, ProductProcess, Variant } from '../../lib/types'
-import { Alert, Button, Empty, Field, Modal, PageHeader, Spinner, Tabs } from '../../components/ui'
+import { Alert, Button, Empty, Field, Icon, Modal, PageHeader, Spinner, Tabs } from '../../components/ui'
 import StockAdjustModal from './StockAdjustModal'
 
 type Tab = 'datos' | 'fotos' | 'variantes' | 'partes' | 'procesos'
@@ -388,47 +388,43 @@ function VariantsTab({ product, attrs, options, variants, vopts, op }: Ctx) {
         {variants.length === 0 ? (
           <Empty>Sin variantes. Agregá atributos y opciones, y después “Crear variantes”.</Empty>
         ) : (
-          <div className="card overflow-x-auto">
-            <table className="w-full min-w-[640px]">
-              <thead className="bg-stone-50">
-                <tr><th className="th">Variante</th><th className="th">Código</th><th className="th">Precio</th><th className="th">Stock</th><th className="th">Activa</th><th className="th" /></tr>
-              </thead>
-              <tbody className="divide-y divide-stone-100">
-                {variants.map((v) => (
-                  <tr key={v.id} className={v.active ? '' : 'opacity-50'}>
-                    <td className="td">
-                      <input className="input py-1" defaultValue={v.label} onBlur={(e) => e.target.value !== v.label && upd(v, { label: e.target.value })} />
-                    </td>
-                    <td className="td w-32">
-                      <input className="input py-1" defaultValue={v.sku ?? ''} placeholder="SKU" onBlur={(e) => e.target.value !== (v.sku ?? '') && upd(v, { sku: e.target.value || null })} />
-                    </td>
-                    <td className="td w-36">
-                      <input
-                        className="input py-1 text-right"
-                        inputMode="decimal"
-                        defaultValue={String(v.price)}
-                        onBlur={(e) => {
-                          const n = parseFloat(e.target.value.replace(',', '.'))
-                          if (!isNaN(n) && n !== Number(v.price)) upd(v, { price: n })
-                        }}
-                      />
-                    </td>
-                    <td className="td whitespace-nowrap">
-                      <span className="mr-2 font-medium">{fmtNum(v.stock)}</span>
-                      <button className="text-xs text-brand-700 hover:underline" onClick={() => setAdjust(v)}>Ajustar</button>
-                    </td>
-                    <td className="td">
-                      <input type="checkbox" checked={v.active} onChange={() => upd(v, { active: !v.active })} />
-                    </td>
-                    <td className="td text-right">
-                      <button className="text-xs text-red-600 hover:underline" onClick={() => confirm(`¿Borrar la variante "${v.label}"?`) && op(() => supabase.from('variants').delete().eq('id', v.id))}>
-                        Borrar
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+          <div className="grid gap-3 sm:grid-cols-2">
+            {variants.map((v) => (
+              <div key={v.id} className={`card space-y-3 p-3 ${v.active ? '' : 'opacity-60'}`}>
+                <div className="flex items-center gap-2">
+                  <input className="input font-medium" aria-label="Nombre de la variante" defaultValue={v.label} onBlur={(e) => e.target.value !== v.label && upd(v, { label: e.target.value })} />
+                  <label className="flex shrink-0 items-center gap-1.5 text-xs text-stone-600">
+                    <input type="checkbox" className="h-5 w-5 accent-brand-700" checked={v.active} onChange={() => upd(v, { active: !v.active })} /> Activa
+                  </label>
+                </div>
+                <div className="grid grid-cols-2 gap-2">
+                  <label className="block">
+                    <span className="label">Precio</span>
+                    <input
+                      className="input text-right"
+                      inputMode="decimal"
+                      defaultValue={String(v.price)}
+                      onBlur={(e) => {
+                        const n = parseFloat(e.target.value.replace(',', '.'))
+                        if (!isNaN(n) && n !== Number(v.price)) upd(v, { price: n })
+                      }}
+                    />
+                  </label>
+                  <label className="block">
+                    <span className="label">Código</span>
+                    <input className="input" defaultValue={v.sku ?? ''} placeholder="SKU" onBlur={(e) => e.target.value !== (v.sku ?? '') && upd(v, { sku: e.target.value || null })} />
+                  </label>
+                </div>
+                <div className="flex items-center justify-between">
+                  <button className="rounded-lg border border-stone-300 px-3 py-1.5 text-sm" onClick={() => setAdjust(v)}>
+                    Stock: <strong>{fmtNum(v.stock)}</strong> · Ajustar
+                  </button>
+                  <button className="p-2 text-red-600" aria-label="Borrar variante" onClick={() => confirm(`¿Borrar la variante "${v.label}"?`) && op(() => supabase.from('variants').delete().eq('id', v.id))}>
+                    <Icon name="trash" />
+                  </button>
+                </div>
+              </div>
+            ))}
           </div>
         )}
       </section>
@@ -444,7 +440,7 @@ function VariantsTab({ product, attrs, options, variants, vopts, op }: Ctx) {
 /* ------------------------------------------------------------------ */
 function ConditionSelect({ value, options, optionLabel, onChange }: { value: string | null; options: AttrOption[]; optionLabel: Record<string, string>; onChange: (v: string | null) => void }) {
   return (
-    <select className="input py-1" value={value ?? ''} onChange={(e) => onChange(e.target.value || null)}>
+    <select className="input" value={value ?? ''} onChange={(e) => onChange(e.target.value || null)}>
       <option value="">Siempre</option>
       {options.map((o) => (
         <option key={o.id} value={o.id}>Sólo si {optionLabel[o.id]}</option>
@@ -488,31 +484,34 @@ function BomTab({ product, parts, bom, options, optionLabel, op, partProcs }: Ct
       {bom.length === 0 ? (
         <Empty>Este producto todavía no tiene partes.</Empty>
       ) : (
-        <div className="card overflow-x-auto">
-          <table className="w-full min-w-[640px]">
-            <thead className="bg-stone-50">
-              <tr><th className="th">Parte</th><th className="th">Cant. por unidad</th><th className="th">Cuándo</th><th className="th">Ruta de la parte</th><th className="th" /></tr>
-            </thead>
-            <tbody className="divide-y divide-stone-100">
-              {bom.map((b) => {
-                const route = partProcs.filter((pp) => pp.part_id === b.part_id)
-                return (
-                  <tr key={b.id}>
-                    <td className="td font-medium">{parts.find((p) => p.id === b.part_id)?.name}</td>
-                    <td className="td w-28">
-                      <input className="input py-1 text-right" inputMode="decimal" defaultValue={String(b.quantity)} onBlur={(e) => {
-                        const n = parseFloat(e.target.value.replace(',', '.'))
-                        if (n > 0 && n !== Number(b.quantity)) upd(b, { quantity: n })
-                      }} />
-                    </td>
-                    <td className="td w-64"><ConditionSelect value={b.condition_option_id} options={options} optionLabel={optionLabel} onChange={(v) => upd(b, { condition_option_id: v })} /></td>
-                    <td className="td text-xs text-stone-500">{route.length ? route.map((r) => r.name).join(' → ') : <span className="text-amber-700">Sin procesos</span>}</td>
-                    <td className="td text-right"><button className="text-xs text-red-600 hover:underline" onClick={() => op(() => supabase.from('product_parts').delete().eq('id', b.id))}>Quitar</button></td>
-                  </tr>
-                )
-              })}
-            </tbody>
-          </table>
+        <div className="space-y-3">
+          {bom.map((b) => {
+            const route = partProcs.filter((pp) => pp.part_id === b.part_id)
+            return (
+              <div key={b.id} className="card space-y-3 p-3">
+                <div className="flex items-start justify-between gap-2">
+                  <div>
+                    <div className="font-medium">{parts.find((p) => p.id === b.part_id)?.name}</div>
+                    <div className="text-xs text-stone-500">{route.length ? route.map((r) => r.name).join(' → ') : <span className="text-amber-700">Sin procesos definidos</span>}</div>
+                  </div>
+                  <button className="p-1 text-red-600" aria-label="Quitar parte" onClick={() => op(() => supabase.from('product_parts').delete().eq('id', b.id))}><Icon name="trash" /></button>
+                </div>
+                <div className="grid grid-cols-[6rem_1fr] gap-2">
+                  <label className="block">
+                    <span className="label">Por unidad</span>
+                    <input className="input text-right" inputMode="decimal" defaultValue={String(b.quantity)} onBlur={(e) => {
+                      const n = parseFloat(e.target.value.replace(',', '.'))
+                      if (n > 0 && n !== Number(b.quantity)) upd(b, { quantity: n })
+                    }} />
+                  </label>
+                  <label className="block">
+                    <span className="label">Cuándo</span>
+                    <ConditionSelect value={b.condition_option_id} options={options} optionLabel={optionLabel} onChange={(v) => upd(b, { condition_option_id: v })} />
+                  </label>
+                </div>
+              </div>
+            )
+          })}
         </div>
       )}
       <div className="card grid gap-3 p-4 sm:grid-cols-[1fr_6rem_1fr_auto] sm:items-end">
@@ -537,7 +536,7 @@ function ProcessTab({ product, procs, parts, bom, options, optionLabel, staff, o
   const bomParts = parts.filter((p) => bom.some((b) => b.part_id === p.id))
   const upd = (p: ProductProcess, patch: Partial<ProductProcess>) => op(() => supabase.from('product_processes').update(patch).eq('id', p.id))
   const staffSel = (value: string | null, onChange: (v: string | null) => void) => (
-    <select className={`input py-1 ${!value ? 'border-amber-300 bg-amber-50' : ''}`} value={value ?? ''} onChange={(e) => onChange(e.target.value || null)}>
+    <select className={`input ${!value ? 'border-amber-300 bg-amber-50' : ''}`} value={value ?? ''} onChange={(e) => onChange(e.target.value || null)}>
       <option value="">Sin asignar</option>
       {staff.map((s) => <option key={s.id} value={s.id}>{personName(s)}</option>)}
     </select>
@@ -570,31 +569,41 @@ function ProcessTab({ product, procs, parts, bom, options, optionLabel, staff, o
       {procs.length === 0 ? (
         <Empty>Sin procesos de producto. Si el producto sólo se arma, agregá “Armado”.</Empty>
       ) : (
-        <div className="card overflow-x-auto">
-          <table className="w-full min-w-[820px]">
-            <thead className="bg-stone-50">
-              <tr><th className="th w-16">Paso</th><th className="th">Proceso</th><th className="th">Sobre</th><th className="th">Cuándo</th><th className="th">Responsable</th><th className="th w-20">Días</th><th className="th" /></tr>
-            </thead>
-            <tbody className="divide-y divide-stone-100">
-              {procs.map((p) => (
-                <tr key={p.id}>
-                  <td className="td"><input type="number" min={1} className="input py-1" defaultValue={p.step_order} onBlur={(e) => +e.target.value !== p.step_order && upd(p, { step_order: Math.max(1, +e.target.value || 1) })} /></td>
-                  <td className="td"><input className="input py-1" defaultValue={p.name} onBlur={(e) => e.target.value.trim() && e.target.value !== p.name && upd(p, { name: e.target.value.trim() })} /></td>
-                  <td className="td">
-                    <select className="input py-1" value={p.part_id ?? ''} onChange={(e) => upd(p, { part_id: e.target.value || null })}>
-                      <option value="">El conjunto</option>
-                      {bomParts.map((bp) => <option key={bp.id} value={bp.id}>{bp.name}</option>)}
-                    </select>
-                  </td>
-                  <td className="td"><ConditionSelect value={p.condition_option_id} options={options} optionLabel={optionLabel} onChange={(v) => upd(p, { condition_option_id: v })} /></td>
-                  <td className="td">{staffSel(p.assignee_id, (v) => upd(p, { assignee_id: v }))}</td>
-                  <td className="td"><input type="number" min={0} className="input py-1" defaultValue={p.lead_days} onBlur={(e) => +e.target.value !== p.lead_days && upd(p, { lead_days: Math.max(0, +e.target.value || 0) })} /></td>
-                  <td className="td text-right"><button className="text-xs text-red-600 hover:underline" onClick={() => op(() => supabase.from('product_processes').delete().eq('id', p.id))}>Quitar</button></td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+        <ol className="space-y-3">
+          {procs.map((p) => (
+            <li key={p.id} className="card space-y-3 p-3">
+              <div className="flex items-center gap-2">
+                <label className="flex shrink-0 items-center gap-1 text-xs text-stone-500">
+                  Paso
+                  <input type="number" min={1} className="input w-14 px-2 text-center" defaultValue={p.step_order} onBlur={(e) => +e.target.value !== p.step_order && upd(p, { step_order: Math.max(1, +e.target.value || 1) })} />
+                </label>
+                <input className="input font-medium" aria-label="Nombre del proceso" defaultValue={p.name} onBlur={(e) => e.target.value.trim() && e.target.value !== p.name && upd(p, { name: e.target.value.trim() })} />
+                <button className="shrink-0 p-1 text-red-600" aria-label="Quitar proceso" onClick={() => op(() => supabase.from('product_processes').delete().eq('id', p.id))}><Icon name="trash" /></button>
+              </div>
+              <div className="grid grid-cols-2 gap-2">
+                <label className="block">
+                  <span className="label">Sobre</span>
+                  <select className="input" value={p.part_id ?? ''} onChange={(e) => upd(p, { part_id: e.target.value || null })}>
+                    <option value="">El conjunto</option>
+                    {bomParts.map((bp) => <option key={bp.id} value={bp.id}>{bp.name}</option>)}
+                  </select>
+                </label>
+                <label className="block">
+                  <span className="label">Cuándo</span>
+                  <ConditionSelect value={p.condition_option_id} options={options} optionLabel={optionLabel} onChange={(v) => upd(p, { condition_option_id: v })} />
+                </label>
+                <label className="block">
+                  <span className="label">Responsable</span>
+                  {staffSel(p.assignee_id, (v) => upd(p, { assignee_id: v }))}
+                </label>
+                <label className="block">
+                  <span className="label">Días</span>
+                  <input type="number" min={0} className="input" defaultValue={p.lead_days} onBlur={(e) => +e.target.value !== p.lead_days && upd(p, { lead_days: Math.max(0, +e.target.value || 0) })} />
+                </label>
+              </div>
+            </li>
+          ))}
+        </ol>
       )}
       <Button variant="secondary" onClick={() => setOpen(true)}>+ Agregar proceso</Button>
       <NewProcessModal

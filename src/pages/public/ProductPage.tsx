@@ -21,8 +21,11 @@ export default function ProductPage() {
   const [added, setAdded] = useState(false)
 
   useEffect(() => {
+    // si cambia la sesión mientras carga, se descarta el resultado viejo (evita mostrar "sin variantes")
+    let alive = true
     ;(async () => {
       const { data: p } = await supabase.from('products').select('*').eq('slug', slug!).maybeSingle()
+      if (!alive) return
       if (!p) return setProduct(null)
       const [im, at, va] = await Promise.all([
         supabase.from('product_images').select('*').eq('product_id', p.id).order('sort'),
@@ -31,12 +34,16 @@ export default function ProductPage() {
       ])
       const attIds = (at.data ?? []).map((a) => a.id)
       const { data: op } = attIds.length ? await supabase.from('attribute_options').select('*').in('attribute_id', attIds).order('sort') : { data: [] }
+      if (!alive) return
       setImages((im.data as ProductImage[]) ?? [])
       setAttrs((at.data as Attribute[]) ?? [])
       setOptions((op as AttrOption[]) ?? [])
       setVariants((va.data as Variant[]) ?? [])
       setProduct(p as Product)
     })()
+    return () => {
+      alive = false
+    }
   }, [slug, canBuy])
 
   if (product === undefined) return <Spinner />
@@ -49,6 +56,7 @@ export default function ProductPage() {
     )
 
   const totalSel = variants.reduce((s, v) => s + (parseInt(qty[v.id] || '0') || 0), 0)
+  const selTotal = variants.reduce((s, v) => s + (parseInt(qty[v.id] || '0') || 0) * Number(v.price), 0)
 
   const addAll = () => {
     for (const v of variants) {
@@ -70,7 +78,7 @@ export default function ProductPage() {
 
   const mainImg = images[active]
   return (
-    <div className="grid gap-8 lg:grid-cols-2 lg:gap-12">
+    <div className="grid gap-6 pb-20 lg:grid-cols-2 lg:gap-12 lg:pb-0">
       <div>
         <div className="aspect-square overflow-hidden rounded-2xl bg-cream-100">
           {mainImg ? (
@@ -121,29 +129,28 @@ export default function ProductPage() {
           ) : variants.length === 0 ? (
             <Alert kind="info">Este producto todavía no tiene variantes a la venta.</Alert>
           ) : (
-            <div className="card overflow-hidden">
-              <table className="w-full">
-                <thead className="bg-stone-50">
-                  <tr>
-                    <th className="th">Variante</th>
-                    <th className="th text-right">Precio</th>
-                    <th className="th w-28 text-right">Cantidad</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-stone-100">
-                  {variants.map((v) => (
-                    <tr key={v.id}>
-                      <td className="td">
+            <>
+              <div className="card divide-y divide-stone-100">
+                {variants.map((v) => {
+                  const q = parseInt(qty[v.id] || '0') || 0
+                  const setQ = (n: number) => {
+                    setAdded(false)
+                    setQty({ ...qty, [v.id]: n > 0 ? String(n) : '' })
+                  }
+                  return (
+                    <div key={v.id} className="flex items-center gap-3 p-3">
+                      <div className="min-w-0 flex-1">
                         <div className="font-medium">{v.label || 'Única'}</div>
-                        {v.sku && <div className="text-xs text-stone-400">{v.sku}</div>}
-                      </td>
-                      <td className="td text-right whitespace-nowrap">{fmtMoney(v.price)}</td>
-                      <td className="td">
+                        <div className="text-sm text-stone-600">{fmtMoney(v.price)} <span className="text-xs text-stone-400">c/u</span></div>
+                      </div>
+                      <div className="flex items-center rounded-lg border border-stone-300 bg-white">
+                        <button type="button" aria-label="Restar 10" className="px-3 py-2 text-lg text-stone-500 disabled:opacity-30" disabled={q <= 0} onClick={() => setQ(Math.max(0, q - 10))}>−</button>
                         <input
                           type="number"
                           min={0}
                           inputMode="numeric"
-                          className="input text-right"
+                          aria-label={`Cantidad ${v.label}`}
+                          className="w-16 border-x border-stone-200 py-2 text-center text-base outline-none"
                           placeholder="0"
                           value={qty[v.id] ?? ''}
                           onChange={(e) => {
@@ -151,21 +158,27 @@ export default function ProductPage() {
                             setQty({ ...qty, [v.id]: e.target.value })
                           }}
                         />
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-              <div className="flex flex-wrap items-center justify-between gap-3 border-t border-stone-100 bg-stone-50 px-3 py-3">
-                <span className="text-sm text-stone-600">{totalSel > 0 ? `${fmtNum(totalSel)} unidades` : 'Cargá las cantidades'}</span>
-                <Button onClick={addAll} disabled={totalSel <= 0}>Agregar al pedido</Button>
+                        <button type="button" aria-label="Sumar 10" className="px-3 py-2 text-lg text-brand-700" onClick={() => setQ(q + 10)}>+</button>
+                      </div>
+                    </div>
+                  )
+                })}
               </div>
-            </div>
+              {/* barra de acción: fija abajo en celular */}
+              <div className="fixed inset-x-0 bottom-[calc(4rem+env(safe-area-inset-bottom))] z-30 border-t border-stone-200 bg-white/95 px-4 py-3 backdrop-blur lg:static lg:mt-3 lg:rounded-xl lg:border lg:px-4">
+                <div className="mx-auto flex max-w-6xl items-center justify-between gap-3">
+                  <span className="text-sm text-stone-600">
+                    {totalSel > 0 ? <><strong className="text-stone-900">{fmtNum(totalSel)} u.</strong> · {fmtMoney(selTotal)}</> : 'Cargá las cantidades (± de a 10)'}
+                  </span>
+                  <Button onClick={addAll} disabled={totalSel <= 0} className="py-2.5">Agregar al pedido</Button>
+                </div>
+              </div>
+            </>
           )}
           {added && (
             <div className="mt-3">
               <Alert kind="success">
-                Agregado. <Link to="/pedido" className="font-medium underline">Ver pedido</Link> o seguí eligiendo.
+                ¡Agregado! <Link to="/pedido" className="font-medium underline">Ver mi pedido</Link> o seguí eligiendo.
               </Alert>
             </div>
           )}

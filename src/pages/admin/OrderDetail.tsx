@@ -4,7 +4,7 @@ import { errMsg, supabase } from '../../lib/supabase'
 import { addDays, fmtDate, fmtDay, fmtMoney, fmtNum, STATUS_LABEL, toISODate, todayISO } from '../../lib/format'
 import type { Order, OrderItem, OrderStatus, Profile, Settings, Task } from '../../lib/types'
 import { personName, useStaff } from '../../lib/data'
-import { Alert, Badge, Button, Field, Modal, PageHeader, Progress, Spinner, StatusBadge } from '../../components/ui'
+import { Alert, Button, Field, Modal, Progress, Spinner, StatusBadge } from '../../components/ui'
 
 export default function OrderDetail() {
   const { id } = useParams()
@@ -75,59 +75,113 @@ export default function OrderDetail() {
   const td = tasks.reduce((s, t) => s + t.done_qty, 0)
   const staffById = Object.fromEntries(staff.map((s) => [s.id, s]))
 
+  const pct = tq > 0 ? Math.round((td / tq) * 100) : 0
+  const phone = client?.phone?.replace(/\D/g, '')
+  const active = order.status !== 'cancelado'
+
   return (
     <div className="max-w-5xl">
-      <Link to="/admin" className="mb-2 inline-block text-sm text-stone-500 hover:text-stone-800">← Pedidos</Link>
-      <PageHeader
-        title={`Pedido #${order.number}`}
-        subtitle={<>Recibido el {fmtDate(order.created_at)} · {fmtNum(totalUnits)} unidades</>}
-        actions={
-          <>
-            <StatusBadge status={order.status} />
-          </>
-        }
-      />
+      <Link to="/admin" className="mb-2 inline-flex items-center gap-1 py-1 text-sm text-stone-500 hover:text-stone-800">← Pedidos</Link>
+      <div className="mb-4 flex items-start justify-between gap-3">
+        <div className="min-w-0">
+          <h1 className="font-display text-2xl font-semibold sm:text-3xl">Pedido #{order.number}</h1>
+          <p className="truncate text-sm text-stone-500">{client?.company || personName(client)} · {fmtNum(totalUnits)} u. · {fmtDate(order.created_at)}</p>
+        </div>
+        <StatusBadge status={order.status} />
+      </div>
       {error && <div className="mb-4"><Alert>{error}</Alert></div>}
       {msg && <div className="mb-4"><Alert kind="success">{msg}</Alert></div>}
 
-      {/* Acción principal */}
-      {!confirmed && order.status !== 'cancelado' && (
-        <div className="mb-6 flex flex-wrap items-center justify-between gap-3 rounded-xl border-2 border-amber-200 bg-amber-50 p-4">
-          <div>
-            <div className="font-medium text-amber-900">Este pedido espera tu confirmación</div>
-            <div className="text-sm text-amber-800">Al confirmarlo se descuenta stock y se reparten las tareas a cada trabajador.</div>
+      <div className="grid gap-4 lg:grid-cols-3 lg:items-start lg:gap-6">
+        {/* Columna lateral (en celular va primero): próximo paso, pago, cliente */}
+        <div className="space-y-4 lg:order-2">
+          {active && !confirmed && (
+            <div className="rounded-xl border-2 border-amber-200 bg-amber-50 p-4">
+              <div className="font-medium text-amber-900">Espera tu confirmación</div>
+              <div className="mb-3 text-sm text-amber-800">Al confirmarlo se usa el stock y se reparten las tareas.</div>
+              <Button className="w-full py-3" onClick={() => setConfirmOpen(true)}>Confirmar y generar trabajo</Button>
+            </div>
+          )}
+          {active && confirmed && (
+            <div className="card p-4">
+              <div className="mb-2 flex items-baseline justify-between">
+                <span className="text-sm text-stone-500">Entrega</span>
+                <span className={`font-semibold ${order.due_date && order.due_date < todayISO() && !['listo', 'entregado'].includes(order.status) ? 'text-red-700' : ''}`}>{fmtDay(order.due_date)}</span>
+              </div>
+              {tq > 0 && (
+                <div className="mb-3 flex items-center gap-2">
+                  <div className="flex-1"><Progress value={td} max={tq} /></div>
+                  <span className="text-sm font-medium">{pct}%</span>
+                </div>
+              )}
+              {order.status === 'en_produccion' || order.status === 'pago_confirmado' ? (
+                <Button className="w-full py-3" variant="secondary" onClick={() => setStatus('listo')}>Marcar listo</Button>
+              ) : order.status === 'listo' ? (
+                <Button className="w-full py-3" onClick={() => setStatus('entregado')}>Marcar entregado</Button>
+              ) : (
+                <Button className="w-full" size="sm" variant="ghost" onClick={() => setStatus('listo')}>Volver a “listo”</Button>
+              )}
+            </div>
+          )}
+
+          <div className="card flex items-center justify-between gap-3 p-4">
+            <div>
+              <div className="text-sm text-stone-500">Pago · {fmtMoney(order.total)}</div>
+              {order.payment_received ? <div className="font-medium text-emerald-700">Recibido ✓</div> : <div className="font-medium text-amber-700">Pendiente</div>}
+            </div>
+            {active && (
+              <Button variant={order.payment_received ? 'ghost' : 'secondary'} size={order.payment_received ? 'sm' : 'md'} onClick={togglePaid}>
+                {order.payment_received ? 'Desmarcar' : 'Marcar pagado'}
+              </Button>
+            )}
           </div>
-          <Button onClick={() => setConfirmOpen(true)}>Confirmar y generar trabajo</Button>
+
+          <div className="card p-4 text-sm">
+            <div className="font-medium">{client?.company || personName(client)}</div>
+            <div className="text-stone-500">
+              {[client?.company ? client.full_name : null, client?.city, client?.cuit && `CUIT ${client.cuit}`].filter(Boolean).join(' · ')}
+            </div>
+            {client?.address && <div className="text-stone-500">{client.address}</div>}
+            <div className="mt-3 grid grid-cols-3 gap-2">
+              {phone && (
+                <a href={`https://wa.me/${phone}?text=${encodeURIComponent(`Hola! Te escribo por el pedido #${order.number}`)}`} target="_blank" rel="noreferrer" className="rounded-lg bg-emerald-600 py-2 text-center font-medium text-white">WhatsApp</a>
+              )}
+              {phone && <a href={`tel:${phone}`} className="rounded-lg border border-stone-300 py-2 text-center font-medium">Llamar</a>}
+              {client?.email && <a href={`mailto:${client.email}?subject=${encodeURIComponent(`Pedido #${order.number}`)}`} className="rounded-lg border border-stone-300 py-2 text-center font-medium">Mail</a>}
+            </div>
+            <div className="mt-3 space-y-1 border-t border-stone-100 pt-3">
+              <div className="flex justify-between"><span className="text-stone-500">Lo pidió para</span><span>{fmtDate(order.requested_date)}</span></div>
+              {order.notes && <div className="rounded-lg bg-stone-50 p-2 text-stone-700">“{order.notes}”</div>}
+            </div>
+          </div>
         </div>
-      )}
 
-      <div className="grid gap-6 lg:grid-cols-3">
-        <div className="space-y-6 lg:col-span-2">
-          <div className="card overflow-x-auto">
-            <table className="w-full">
-              <thead className="bg-stone-50">
-                <tr><th className="th">Producto</th><th className="th text-right">Cant.</th><th className="th text-right">De stock</th><th className="th text-right">Precio</th><th className="th text-right">Subtotal</th></tr>
-              </thead>
-              <tbody className="divide-y divide-stone-100">
-                {items.map((i) => (
-                  <tr key={i.id}>
-                    <td className="td"><div className="font-medium">{i.product_name}</div><div className="text-xs text-stone-500">{i.variant_label}</div></td>
-                    <td className="td text-right">{fmtNum(i.quantity)}</td>
-                    <td className="td text-right text-stone-500">{i.qty_from_stock ? fmtNum(i.qty_from_stock) : '—'}</td>
-                    <td className="td text-right whitespace-nowrap">{fmtMoney(i.unit_price)}</td>
-                    <td className="td text-right whitespace-nowrap">{fmtMoney(i.unit_price * i.quantity)}</td>
-                  </tr>
-                ))}
-              </tbody>
-              <tfoot><tr className="bg-stone-50"><td className="td font-medium" colSpan={4}>Total</td><td className="td text-right font-semibold">{fmtMoney(order.total)}</td></tr></tfoot>
-            </table>
+        {/* Columna principal: productos y trabajo */}
+        <div className="space-y-4 lg:order-1 lg:col-span-2">
+          <div className="card divide-y divide-stone-100">
+            {items.map((i) => (
+              <div key={i.id} className="flex items-start justify-between gap-3 p-3 sm:p-4">
+                <div className="min-w-0">
+                  <div className="font-medium">{i.product_name}</div>
+                  <div className="text-xs text-stone-500">{i.variant_label}</div>
+                  <div className="mt-0.5 text-sm text-stone-600">
+                    {fmtNum(i.quantity)} × {fmtMoney(i.unit_price)}
+                    {i.qty_from_stock > 0 && <span className="ml-1 text-emerald-700">· {fmtNum(i.qty_from_stock)} de stock</span>}
+                  </div>
+                </div>
+                <div className="whitespace-nowrap font-medium">{fmtMoney(i.unit_price * i.quantity)}</div>
+              </div>
+            ))}
+            <div className="flex justify-between bg-stone-50 p-3 sm:p-4">
+              <span className="font-medium">Total</span>
+              <span className="font-semibold">{fmtMoney(order.total)}</span>
+            </div>
           </div>
 
-          {/* Tareas */}
           <div>
             <div className="mb-2 flex items-center justify-between">
               <h2 className="font-display text-lg font-semibold">Trabajo</h2>
-              {tq > 0 && <span className="text-sm text-stone-500">{Math.round((td / tq) * 100)}% hecho</span>}
+              {tq > 0 && <span className="text-sm text-stone-500">{pct}% hecho</span>}
             </div>
             {!confirmed ? (
               <p className="text-sm text-stone-500">Las tareas se generan al confirmar el pedido.</p>
@@ -135,72 +189,33 @@ export default function OrderDetail() {
               <p className="text-sm text-stone-500">No hizo falta fabricar nada: todo salió de stock (o los productos no tienen procesos definidos).</p>
             ) : (
               <div className="card divide-y divide-stone-100">
-                {tasks.map((t) => (
-                  <div key={t.id} className="grid gap-2 p-3 sm:grid-cols-[1fr_auto_10rem] sm:items-center">
-                    <div className="min-w-0">
-                      <div className="text-sm font-medium">
-                        {t.process_name} <span className="font-normal text-stone-500">· {t.description}</span>
+                {tasks.map((t) => {
+                  const late = t.due_date && t.due_date < todayISO() && t.status !== 'hecha'
+                  return (
+                    <div key={t.id} className="space-y-2 p-3 sm:grid sm:grid-cols-[1fr_auto_10rem] sm:items-center sm:gap-3 sm:space-y-0">
+                      <div className="min-w-0">
+                        <div className="flex items-baseline justify-between gap-2">
+                          <div className="text-sm font-medium">{t.process_name} · {fmtNum(t.quantity)} u.</div>
+                          <div className={`whitespace-nowrap text-xs sm:hidden ${late ? 'font-semibold text-red-700' : 'text-stone-500'}`}>{fmtDay(t.due_date)}</div>
+                        </div>
+                        <div className="truncate text-xs text-stone-500">{t.description}</div>
+                        <div className="mt-1.5 flex items-center gap-2">
+                          <div className="flex-1 sm:max-w-40"><Progress value={t.done_qty} max={t.quantity} /></div>
+                          <span className="text-xs text-stone-500">{fmtNum(t.done_qty)}/{fmtNum(t.quantity)}</span>
+                        </div>
                       </div>
-                      <div className="mt-1 flex items-center gap-2">
-                        <div className="w-32"><Progress value={t.done_qty} max={t.quantity} /></div>
-                        <span className="text-xs text-stone-500">{fmtNum(t.done_qty)}/{fmtNum(t.quantity)}</span>
-                      </div>
+                      <div className={`hidden text-sm sm:block ${late ? 'font-medium text-red-700' : 'text-stone-600'}`}>{fmtDay(t.due_date)}</div>
+                      <select className={`input py-1.5 ${!t.assignee_id ? 'border-amber-300 bg-amber-50' : ''}`} value={t.assignee_id ?? ''} onChange={(e) => reassign(t.id, e.target.value)}>
+                        <option value="">Sin asignar</option>
+                        {staff.map((s) => (
+                          <option key={s.id} value={s.id}>{personName(s)}</option>
+                        ))}
+                        {t.assignee_id && !staffById[t.assignee_id] && <option value={t.assignee_id}>(inactivo)</option>}
+                      </select>
                     </div>
-                    <div className={`text-sm ${t.due_date && t.due_date < todayISO() && t.status !== 'hecha' ? 'font-medium text-red-700' : 'text-stone-600'}`}>
-                      {fmtDay(t.due_date)}
-                    </div>
-                    <select className={`input py-1 ${!t.assignee_id ? 'border-amber-300 bg-amber-50' : ''}`} value={t.assignee_id ?? ''} onChange={(e) => reassign(t.id, e.target.value)}>
-                      <option value="">Sin asignar</option>
-                      {staff.map((s) => (
-                        <option key={s.id} value={s.id}>{personName(s)}</option>
-                      ))}
-                      {t.assignee_id && !staffById[t.assignee_id] && <option value={t.assignee_id}>(inactivo)</option>}
-                    </select>
-                  </div>
-                ))}
+                  )
+                })}
               </div>
-            )}
-          </div>
-        </div>
-
-        <div className="space-y-4">
-          <div className="card space-y-1 p-4 text-sm">
-            <div className="label">Cliente</div>
-            <div className="font-medium">{client?.company || personName(client)}</div>
-            {client?.company && <div>{client.full_name}</div>}
-            {client?.phone && (
-              <a className="block text-brand-700 underline" href={`https://wa.me/${client.phone.replace(/\D/g, '')}`} target="_blank" rel="noreferrer">
-                {client.phone}
-              </a>
-            )}
-            {client?.email && <a className="block text-brand-700 underline" href={`mailto:${client.email}`}>{client.email}</a>}
-            {client?.city && <div className="text-stone-500">{client.city}{client.address ? ` · ${client.address}` : ''}</div>}
-            {client?.cuit && <div className="text-stone-500">CUIT {client.cuit}</div>}
-          </div>
-
-          <div className="card space-y-2 p-4 text-sm">
-            <div className="flex justify-between"><span className="text-stone-500">Fecha pedida</span><span>{fmtDate(order.requested_date)}</span></div>
-            <div className="flex justify-between"><span className="text-stone-500">Entrega</span><span className="font-medium">{order.due_date ? fmtDate(order.due_date) : '—'}</span></div>
-            {order.notes && <div className="rounded-lg bg-stone-50 p-2 text-stone-700">“{order.notes}”</div>}
-          </div>
-
-          <div className="card space-y-3 p-4">
-            <div className="flex items-center justify-between text-sm">
-              <span>Pago</span>
-              {order.payment_received ? <Badge color="bg-emerald-100 text-emerald-800">Recibido</Badge> : <Badge color="bg-amber-100 text-amber-800">Pendiente</Badge>}
-            </div>
-            <Button variant="secondary" className="w-full" onClick={togglePaid} disabled={order.status === 'cancelado'}>
-              {order.payment_received ? 'Desmarcar pago' : 'Marcar pago recibido'}
-            </Button>
-            {confirmed && order.status !== 'cancelado' && (
-              <div className="flex flex-wrap gap-2">
-                {order.status !== 'listo' && <Button size="sm" variant="secondary" onClick={() => setStatus('listo')}>Marcar listo</Button>}
-                {order.status !== 'entregado' && <Button size="sm" variant="secondary" onClick={() => setStatus('entregado')}>Marcar entregado</Button>}
-                {order.status === 'entregado' && <Button size="sm" variant="secondary" onClick={() => setStatus('listo')}>Volver a listo</Button>}
-              </div>
-            )}
-            {order.status !== 'cancelado' && order.status !== 'entregado' && (
-              <Button variant="danger" size="sm" className="w-full" onClick={cancel}>Cancelar pedido</Button>
             )}
           </div>
 
@@ -210,6 +225,10 @@ export default function OrderDetail() {
             </Field>
             <Button size="sm" variant="secondary" onClick={saveNotes}>Guardar notas</Button>
           </div>
+
+          {active && order.status !== 'entregado' && (
+            <Button variant="danger" className="w-full" onClick={cancel}>Cancelar pedido</Button>
+          )}
         </div>
       </div>
 

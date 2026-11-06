@@ -1,0 +1,10 @@
+{
+  "name": "La Calandria",
+  "short_name": "La Calandria",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#fbf8f2",
+  "theme_color": "#2f4a32",
+  "icons": [{ "src": "favicon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }]
+}

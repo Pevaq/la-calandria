@@ -54,30 +54,32 @@ export default function Team() {
 
       {tab === 'equipo' && (
         <div className="space-y-4">
-          <div className="flex justify-between gap-2">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <p className="text-sm text-stone-600">Cada trabajador entra con su email y contraseña y ve sólo sus tareas.</p>
             <Button onClick={() => setOpen('worker')}>+ Agregar trabajador</Button>
           </div>
           <div className="card divide-y divide-stone-100">
             {staff.map((p) => (
-              <div key={p.id} className={`flex flex-wrap items-center gap-3 p-3 ${p.active ? '' : 'opacity-50'}`}>
-                <div className="min-w-0 flex-1">
+              <div key={p.id} className={`space-y-3 p-4 ${p.active ? '' : 'opacity-50'}`}>
+                <div className="min-w-0">
                   <div className="font-medium">{personName(p)} {p.id === me?.id && <span className="text-xs text-stone-400">(vos)</span>}</div>
-                  <div className="text-xs text-stone-500">{p.email}{p.city ? ` · ${p.city}` : ''}</div>
+                  <div className="truncate text-xs text-stone-500">{p.email}</div>
                 </div>
-                <input className="input w-36 py-1" placeholder="Ciudad" defaultValue={p.city ?? ''} onBlur={(e) => e.target.value !== (p.city ?? '') && upd(p, { city: e.target.value || null })} />
-                <select className="input w-40 py-1" value={p.role} disabled={p.id === me?.id} onChange={(e) => upd(p, { role: e.target.value as Role }, 'Rol actualizado')}>
-                  <option value="worker">Trabajador</option>
-                  <option value="admin">Administrador</option>
-                  <option value="client">Cliente</option>
-                </select>
+                <div className="grid grid-cols-2 gap-2">
+                  <input className="input" placeholder="Ciudad" aria-label="Ciudad" defaultValue={p.city ?? ''} onBlur={(e) => e.target.value !== (p.city ?? '') && upd(p, { city: e.target.value || null })} />
+                  <select className="input" aria-label="Rol" value={p.role} disabled={p.id === me?.id} onChange={(e) => upd(p, { role: e.target.value as Role }, 'Rol actualizado')}>
+                    <option value="worker">Trabajador</option>
+                    <option value="admin">Administrador</option>
+                    <option value="client">Cliente</option>
+                  </select>
+                </div>
                 {p.id !== me?.id && (
-                  <>
-                    <Button size="sm" variant="ghost" onClick={() => setPwFor(p)}>Contraseña</Button>
+                  <div className="flex gap-2">
+                    <Button size="sm" variant="secondary" onClick={() => setPwFor(p)}>Cambiar contraseña</Button>
                     <Button size="sm" variant={p.active ? 'danger' : 'secondary'} onClick={() => upd(p, { active: !p.active }, p.active ? 'Usuario desactivado' : 'Usuario activado')}>
                       {p.active ? 'Desactivar' : 'Activar'}
                     </Button>
-                  </>
+                  </div>
                 )}
               </div>
             ))}
@@ -87,7 +89,7 @@ export default function Team() {
 
       {tab === 'clientes' && (
         <div className="space-y-4">
-          <div className="flex justify-between gap-2">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <p className="text-sm text-stone-600">Los clientes se registran en la web. Habilitalos para que vean precios y puedan pedir.</p>
             <Button variant="secondary" onClick={() => setOpen('client')}>+ Alta manual</Button>
           </div>
@@ -96,8 +98,8 @@ export default function Team() {
           ) : (
             <div className="card divide-y divide-stone-100">
               {[...pending, ...clients.filter((c) => !pending.includes(c))].map((c) => (
-                <div key={c.id} className={`flex flex-wrap items-center gap-3 p-3 ${c.active ? '' : 'opacity-50'} ${!c.approved && c.active ? 'bg-amber-50' : ''}`}>
-                  <div className="min-w-0 flex-1">
+                <div key={c.id} className={`flex flex-wrap items-center gap-x-3 gap-y-2 p-4 ${c.active ? '' : 'opacity-50'} ${!c.approved && c.active ? 'bg-amber-50' : ''}`}>
+                  <div className="w-full min-w-0 sm:w-auto sm:flex-1">
                     <div className="font-medium">{c.company || personName(c)}</div>
                     <div className="text-xs text-stone-500">
                       {[c.full_name, c.phone, c.email, c.city, c.cuit && `CUIT ${c.cuit}`].filter(Boolean).join(' · ')}
