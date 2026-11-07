@@ -39,7 +39,7 @@ export default function DemoLogin() {
       {(['Dueño', 'Equipo', 'Clientes'] as const).map((g) => (
         <section key={g}>
           <h2 className="mb-2 text-xs font-semibold uppercase tracking-wider text-stone-500">{g}</h2>
-          <div className="grid gap-2 sm:grid-cols-2">
+          <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
             {DEMO_USERS.filter((u) => u.group === g).map((u) => {
               const current = profile?.email === u.email
               return (

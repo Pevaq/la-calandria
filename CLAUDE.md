@@ -68,7 +68,9 @@ Convenciones: un componente de pantalla por archivo, nombre en PascalCase; lo qu
 
 ## Lista de verificación de experiencia de uso (cada pantalla)
 
-1. **Celular primero**: probar en tamaño iPhone (390 px). Sin scroll horizontal. Tarjetas en vez de tablas anchas. Barra de navegación abajo.
+1. **Celular primero**: probar en iPhone (390 px) **y en Android chico (360 px)**. Sin scroll horizontal ni zoom automático: el chequeo es `window.innerWidth` igual al ancho del teléfono (si la página es más ancha, el navegador se aleja solo y `innerWidth` crece). Tarjetas en vez de tablas anchas. Barra de navegación abajo.
+   - Toda grilla responsive lleva `grid-cols-1` de base (`grid grid-cols-1 lg:grid-cols-3`): sin eso, un texto largo con `truncate` estira la columna más allá de la pantalla.
+   - `truncate` solo funciona dentro de un contenedor con `min-w-0`.
 2. Campos de 16 px (evita el zoom de iPhone), botones grandes, acciones principales arriba y visibles.
 3. Siempre los cuatro estados: **cargando**, **vacío** (con qué hacer), **error** (mensaje claro en castellano, vía `errMsg`) y **éxito** (confirmación breve).
 4. Confirmar antes de algo destructivo o que no se deshace (cancelar pedido, borrar, re-planificar) y decir qué va a pasar.

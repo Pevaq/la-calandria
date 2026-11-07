@@ -147,7 +147,7 @@ function PartRoute({ part, route, staff, op }: { part: Part; route: PartProcess[
   }
   return (
     <div className="space-y-3 bg-stone-50 px-3 pb-4 pt-2">
-      <div className="grid gap-3 sm:grid-cols-2">
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
         <label className="block">
           <span className="label">Nombre</span>
           <input className="input" defaultValue={part.name} onBlur={(e) => e.target.value.trim() && e.target.value !== part.name && op(() => supabase.from('parts').update({ name: e.target.value.trim() }).eq('id', part.id))} />

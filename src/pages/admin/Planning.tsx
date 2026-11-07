@@ -67,7 +67,7 @@ export default function Planning() {
       ) : groups.every((g) => g.tasks.length === 0) ? (
         <Empty>No hay trabajo para esta semana.</Empty>
       ) : (
-        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
           {groups.map((g) => {
             const pend = g.tasks.reduce((s, t) => s + (t.quantity - t.done_qty), 0)
             return (

@@ -90,7 +90,7 @@ export default function Cart() {
           ) : (
             <div className="card space-y-4 p-5">
               {error && <Alert>{error}</Alert>}
-              <div className="grid gap-4 sm:grid-cols-2">
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <Field label="¿Para cuándo lo necesitás?" hint="Te confirmamos la fecha de entrega">
                   <input type="date" className="input" min={toISODate(addDays(new Date(), 1))} value={date} onChange={(e) => setDate(e.target.value)} />
                 </Field>

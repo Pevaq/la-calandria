@@ -154,7 +154,7 @@ export default function Help({ available }: { available: DocSlug[] }) {
           {rendered.toc.length > 2 && (
             <nav className="no-print mb-6 rounded-xl border border-stone-200 bg-white p-4" aria-label="Índice">
               <div className="label mb-2">En este manual</div>
-              <ol className="grid gap-1 text-sm sm:grid-cols-2">
+              <ol className="grid grid-cols-1 gap-1 text-sm sm:grid-cols-2">
                 {rendered.toc.map((t) => (
                   <li key={t.id}>
                     <a

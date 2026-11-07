@@ -42,7 +42,7 @@ export default function Register() {
     <div className="mx-auto max-w-lg py-6">
       <h1 className="mb-2 font-display text-3xl font-semibold">Cuenta mayorista</h1>
       <p className="mb-6 text-sm text-stone-600">Completá tus datos. Revisamos cada cuenta antes de habilitarla.</p>
-      <form onSubmit={submit} className="card grid gap-4 p-6 sm:grid-cols-2">
+      <form onSubmit={submit} className="card grid grid-cols-1 gap-4 p-6 sm:grid-cols-2">
         {error && <div className="sm:col-span-2"><Alert>{error}</Alert></div>}
         <Field label="Comercio / razón social" className="sm:col-span-2">
           <input required className="input" value={f.company} onChange={set('company')} />

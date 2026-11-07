@@ -116,7 +116,7 @@ export default function OrderDetail() {
         </div>
       )}
 
-      <div className="grid gap-4 lg:grid-cols-3 lg:items-start lg:gap-6">
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-3 lg:items-start lg:gap-6">
         {/* Columna lateral (en celular va primero): próximo paso, pago, cliente */}
         <div className="space-y-4 lg:order-2">
           {active && !confirmed && (

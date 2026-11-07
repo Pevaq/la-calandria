@@ -73,7 +73,7 @@ export default function ClientPage() {
         <Stat label="Saldo pendiente" value={fmtMoney(balance)} accent={balance > 0} />
       </div>
 
-      <div className="grid gap-4 lg:grid-cols-3 lg:items-start">
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-3 lg:items-start">
         <div className="space-y-4 lg:order-2">
           <div className="card p-4 text-sm">
             <div className="grid grid-cols-3 gap-2">

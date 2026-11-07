@@ -102,7 +102,7 @@ export default function StockOrderModal({ open, onClose }: { open: boolean; onCl
               </div>
             ))}
         </div>
-        <div className="grid gap-3 sm:grid-cols-2">
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
           <Field label="Para cuándo"><input type="date" className="input" value={date} onChange={(e) => setDate(e.target.value)} /></Field>
           <Field label="Nota (opcional)"><input className="input" value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Ej: stock para temporada" /></Field>
         </div>

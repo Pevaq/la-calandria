@@ -59,7 +59,7 @@ export default function SettingsPage() {
       <PageHeader title="Configuración" />
       {error && <div className="mb-4"><Alert>{error}</Alert></div>}
       {msg && <div className="mb-4"><Alert kind="success">{msg}</Alert></div>}
-      <div className="grid gap-6 lg:grid-cols-2">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
         <div className="space-y-6">
           <section className="card grid gap-4 p-5">
             <h2 className="font-medium">Datos para transferir</h2>

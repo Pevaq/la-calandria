@@ -195,7 +195,7 @@ function DataTab({ product, op, onDelete }: Ctx & { onDelete: () => void }) {
     )
   const set = (k: keyof typeof f) => (e: { target: { value: string } }) => setF({ ...f, [k]: e.target.value })
   return (
-    <div className="card grid gap-4 p-5 sm:grid-cols-2">
+    <div className="card grid grid-cols-1 gap-4 p-5 sm:grid-cols-2">
       <Field label="Nombre"><input className="input" value={f.name} onChange={set('name')} /></Field>
       <Field label="Categoría" hint="Ej: Bombillas, Mates, Accesorios"><input className="input" value={f.category} onChange={set('category')} /></Field>
       <Field label="Descripción" className="sm:col-span-2"><textarea className="input min-h-28" value={f.description} onChange={set('description')} /></Field>
@@ -400,7 +400,7 @@ function VariantsTab({ product, attrs, options, variants, vopts, op }: Ctx) {
         {variants.length === 0 ? (
           <Empty>Sin variantes. Agregá atributos y opciones, y después “Crear variantes”.</Empty>
         ) : (
-          <div className="grid gap-3 sm:grid-cols-2">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             {variants.map((v) => (
               <div key={v.id} className={`card space-y-3 p-3 ${v.active ? '' : 'opacity-60'}`}>
                 <div className="flex items-center gap-2">
@@ -527,7 +527,7 @@ function BomTab({ product, parts, bom, options, optionLabel, op, partProcs }: Ct
           })}
         </div>
       )}
-      <div className="card grid gap-3 p-4 sm:grid-cols-[1fr_6rem_1fr_auto] sm:items-end">
+      <div className="card grid grid-cols-1 gap-3 p-4 sm:grid-cols-[1fr_6rem_1fr_auto] sm:items-end">
         <Field label="Parte">
           <select className="input" value={partId} onChange={(e) => setPartId(e.target.value)}>
             <option value="">— Nueva parte —</option>
@@ -648,7 +648,7 @@ function NewProcessModal({
   }, [open, nextStep])
   return (
     <Modal open={open} onClose={onClose} title="Nuevo proceso">
-      <div className="grid gap-3 sm:grid-cols-2">
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
         <Field label="Nombre" className="sm:col-span-2">
           <input autoFocus className="input" placeholder="Ej: Armado, Cincelado, Grabado láser" value={f.name} onChange={(e) => setF({ ...f, name: e.target.value })} />
         </Field>

@@ -112,7 +112,7 @@ export default function Reports() {
             <MonthBars months={r.months} />
           </section>
 
-          <div className="grid gap-5 lg:grid-cols-2">
+          <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
             <Ranked title="Productos más pedidos" note="unidades" rows={r.topProducts} fmt={(n) => `${fmtNum(n)} u.`} />
             <Ranked title="Clientes que más compraron" note="monto" rows={r.topClients} fmt={fmtMoney} />
           </div>

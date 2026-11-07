@@ -66,7 +66,7 @@ export default function NewOrderModal({ open, onClose, onCreated }: { open: bool
     <Modal open={open} onClose={onClose} title="Cargar pedido" wide>
       <div className="space-y-4">
         {error && <Alert>{error}</Alert>}
-        <div className="grid gap-3 sm:grid-cols-2">
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
           <Field label="Cliente">
             <select className="input" value={client} onChange={(e) => setClient(e.target.value)}>
               <option value="">Elegir…</option>

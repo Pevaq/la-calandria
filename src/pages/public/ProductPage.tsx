@@ -86,7 +86,7 @@ export default function ProductPage() {
 
   const mainImg = images[active]
   return (
-    <div className="grid gap-6 pb-20 lg:grid-cols-2 lg:gap-12 lg:pb-0">
+    <div className="grid grid-cols-1 gap-6 pb-20 lg:grid-cols-2 lg:gap-12 lg:pb-0">
       <div>
         <div className="aspect-square overflow-hidden rounded-2xl bg-cream-100">
           {mainImg ? (
