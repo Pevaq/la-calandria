@@ -1,10 +1,11 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { Link, useParams, useSearchParams } from 'react-router-dom'
 import { supabase } from '../../lib/supabase'
 import { fmtDate, fmtMoney, fmtNum } from '../../lib/format'
 import type { Order, OrderItem, OrderStatus } from '../../lib/types'
 import { Alert, Spinner, StatusBadge } from '../../components/ui'
 import PaymentInfo from '../../components/PaymentInfo'
+import Payments from '../../components/Payments'
 
 const STEPS: OrderStatus[] = ['recibido', 'pago_confirmado', 'en_produccion', 'listo', 'entregado']
 const STEP_LABEL: Record<string, string> = {
@@ -21,14 +22,15 @@ export default function OrderView() {
   const [order, setOrder] = useState<Order | null | undefined>(undefined)
   const [items, setItems] = useState<OrderItem[]>([])
 
-  useEffect(() => {
-    ;(async () => {
-      const { data } = await supabase.from('orders').select('*').eq('id', id!).maybeSingle()
-      const { data: it } = await supabase.from('order_items').select('*').eq('order_id', id!)
-      setItems((it as OrderItem[]) ?? [])
-      setOrder((data as Order) ?? null)
-    })()
+  const load = useCallback(async () => {
+    const { data } = await supabase.from('orders').select('*').eq('id', id!).maybeSingle()
+    const { data: it } = await supabase.from('order_items').select('*').eq('order_id', id!)
+    setItems((it as OrderItem[]) ?? [])
+    setOrder((data as Order) ?? null)
   }, [id])
+  useEffect(() => {
+    load()
+  }, [load])
 
   if (order === undefined) return <Spinner />
   if (!order) return <Alert>No encontramos ese pedido.</Alert>
@@ -75,6 +77,7 @@ export default function OrderView() {
                 <td className="td">
                   <div className="font-medium">{i.product_name}</div>
                   <div className="text-xs text-stone-500">{i.variant_label}<span className="sm:hidden"> · {fmtMoney(i.unit_price)} c/u</span></div>
+                  {Number(i.discount_pct) > 0 && <div className="text-xs text-emerald-700">{Number(i.discount_pct)}% de descuento</div>}
                 </td>
                 <td className="td text-right">{fmtNum(i.quantity)}</td>
                 <td className="td hidden text-right whitespace-nowrap sm:table-cell">{fmtMoney(i.unit_price)}</td>
@@ -87,8 +90,10 @@ export default function OrderView() {
       </div>
       {order.notes && <p className="text-sm text-stone-600"><span className="text-stone-500">Notas: </span>{order.notes}</p>}
 
-      {!order.payment_received && order.status !== 'cancelado' && <PaymentInfo total={order.total} orderNumber={order.number} />}
-      {order.payment_received && <Alert kind="success">Pago recibido. ¡Gracias!</Alert>}
+      {!order.payment_received && order.status !== 'cancelado' && (
+        <PaymentInfo total={Math.max(0, Number(order.total) - Number(order.paid_amount))} orderNumber={order.number} />
+      )}
+      {order.status !== 'cancelado' && <Payments order={order} onChange={load} />}
 
       <Link to="/mis-pedidos" className="inline-block text-sm text-brand-700 underline">Ver todos mis pedidos</Link>
     </div>

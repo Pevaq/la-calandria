@@ -3,7 +3,7 @@ import { Link, useNavigate, useParams } from 'react-router-dom'
 import { errMsg, IMAGES_BUCKET, imageUrl, supabase } from '../../lib/supabase'
 import { fmtNum, slugify } from '../../lib/format'
 import { personName, useStaff } from '../../lib/data'
-import type { Attribute, AttrOption, Part, PartProcess, Product, ProductImage, ProductPart, ProductProcess, Variant } from '../../lib/types'
+import type { Attribute, AttrOption, Part, PartProcess, Product, ProductDiscount, ProductImage, ProductPart, ProductProcess, Variant } from '../../lib/types'
 import { Alert, Button, Empty, Field, Icon, Modal, PageHeader, Spinner, Tabs } from '../../components/ui'
 import StockAdjustModal from './StockAdjustModal'
 
@@ -114,6 +114,17 @@ export default function ProductEditor() {
             {product.published && (
               <Link to={`/p/${product.slug}`} target="_blank"><Button variant="ghost">Ver en tienda ↗</Button></Link>
             )}
+            <Button
+              variant="ghost"
+              onClick={async () => {
+                if (!confirm(`¿Duplicar "${product.name}"? Se copia todo (variantes, partes, procesos y descuentos) como borrador, sin stock.`)) return
+                const { data, error } = await supabase.rpc('duplicate_product', { p_product_id: product.id })
+                if (error) return setError(errMsg(error))
+                nav(`/admin/productos/${data as string}`)
+              }}
+            >
+              Duplicar
+            </Button>
           </>
         }
       />
@@ -219,7 +230,8 @@ function PhotosTab({ product, images, op, setError }: Ctx) {
     await op(() => Promise.resolve({ error: null }))
   }
   const remove = async (im: ProductImage) => {
-    await supabase.storage.from(IMAGES_BUCKET).remove([im.path])
+    const { count } = await supabase.from('product_images').select('id', { count: 'exact', head: true }).eq('path', im.path)
+    if ((count ?? 0) <= 1) await supabase.storage.from(IMAGES_BUCKET).remove([im.path])
     await op(() => supabase.from('product_images').delete().eq('id', im.id))
   }
   const makeFirst = async (im: ProductImage) => {
@@ -428,6 +440,7 @@ function VariantsTab({ product, attrs, options, variants, vopts, op }: Ctx) {
           </div>
         )}
       </section>
+      <QtyDiscounts productId={product.id} />
       <StockAdjustModal
         target={adjust ? { kind: 'variant', id: adjust.id, name: `${product.name} ${adjust.label}`, stock: adjust.stock } : null}
         onClose={() => setAdjust(null)}
@@ -668,5 +681,61 @@ function NewProcessModal({
         </div>
       </div>
     </Modal>
+  )
+}
+
+/* ------------------------------------------------------------------ */
+function QtyDiscounts({ productId }: { productId: string }) {
+  const [rows, setRows] = useState<ProductDiscount[]>([])
+  const [minQty, setMinQty] = useState('')
+  const [pct, setPct] = useState('')
+  const [error, setError] = useState('')
+  const load = useCallback(async () => {
+    const { data } = await supabase.from('product_discounts').select('*').eq('product_id', productId).order('min_qty')
+    setRows((data as ProductDiscount[]) ?? [])
+  }, [productId])
+  useEffect(() => {
+    load()
+  }, [load])
+  const add = async () => {
+    const q = parseInt(minQty)
+    const p = parseFloat(pct.replace(',', '.'))
+    if (!(q > 1) || !(p > 0 && p <= 90)) return setError('Poné una cantidad mayor a 1 y un porcentaje entre 1 y 90')
+    setError('')
+    const { error } = await supabase.from('product_discounts').upsert({ product_id: productId, min_qty: q, pct: p }, { onConflict: 'product_id,min_qty' })
+    if (error) return setError(errMsg(error))
+    setMinQty('')
+    setPct('')
+    load()
+  }
+  return (
+    <section className="card p-5">
+      <h3 className="mb-1 font-medium">Descuentos por cantidad</h3>
+      <p className="mb-3 text-sm text-stone-500">Se aplican sobre el total de unidades de este producto en el pedido (sumando variantes). Gana el escalón más alto alcanzado.</p>
+      {error && <div className="mb-3"><Alert>{error}</Alert></div>}
+      {rows.length > 0 && (
+        <ul className="mb-3 divide-y divide-stone-100 rounded-lg border border-stone-200">
+          {rows.map((r) => (
+            <li key={r.id} className="flex items-center justify-between px-3 py-2 text-sm">
+              <span>Desde <strong>{fmtNum(r.min_qty)}</strong> u. → <strong>−{Number(r.pct)}%</strong></span>
+              <button className="p-1 text-red-600" aria-label="Quitar descuento" onClick={async () => { await supabase.from('product_discounts').delete().eq('id', r.id); load() }}>
+                <Icon name="trash" className="h-4 w-4" />
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
+      <div className="flex flex-wrap items-end gap-2">
+        <label className="block">
+          <span className="label">Desde (u.)</span>
+          <input className="input w-28 text-right" type="number" min={2} inputMode="numeric" value={minQty} onChange={(e) => setMinQty(e.target.value)} placeholder="100" />
+        </label>
+        <label className="block">
+          <span className="label">Descuento %</span>
+          <input className="input w-24 text-right" inputMode="decimal" value={pct} onChange={(e) => setPct(e.target.value)} placeholder="10" />
+        </label>
+        <Button variant="secondary" onClick={add}>Agregar</Button>
+      </div>
+    </section>
   )
 }

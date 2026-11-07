@@ -166,8 +166,8 @@ begin
 
   -- cantidad mínima por producto
   select p.name into v_bad
-    from _req r join public.products p on p.id = r.product_id
-   group by p.id, p.name, p.min_qty having sum(r.qty) < p.min_qty limit 1;
+    from _req q join public.products p on p.id = q.product_id
+   group by p.id, p.name, p.min_qty having sum(q.qty) < p.min_qty limit 1;
   if v_bad is not null then raise exception 'No se llega a la cantidad mínima de %', v_bad; end if;
 
   insert into public.orders (client_id, requested_date, notes)

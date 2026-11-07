@@ -113,6 +113,7 @@ const ADMIN_MAIN = [
   { to: '/trabajo', label: 'Mis tareas', short: 'Tareas', icon: 'check' },
 ]
 const ADMIN_MORE = [
+  { to: '/admin/reportes', label: 'Reportes', icon: 'chart' },
   { to: '/admin/partes', label: 'Partes y stock', icon: 'parts' },
   { to: '/admin/equipo', label: 'Equipo y clientes', icon: 'team' },
   { to: '/admin/configuracion', label: 'Configuración', icon: 'settings' },

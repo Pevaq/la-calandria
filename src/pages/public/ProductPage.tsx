@@ -4,6 +4,7 @@ import { imageUrl, supabase } from '../../lib/supabase'
 import { useAuth } from '../../lib/auth'
 import { useCart } from '../../lib/cart'
 import { fmtMoney, fmtNum } from '../../lib/format'
+import { usePricing } from '../../lib/pricing'
 import type { Attribute, AttrOption, Product, ProductImage, Variant } from '../../lib/types'
 import { Alert, BIRD_URL, Button, Spinner } from '../../components/ui'
 
@@ -19,6 +20,7 @@ export default function ProductPage() {
   const [qty, setQty] = useState<Record<string, string>>({})
   const [active, setActive] = useState(0)
   const [added, setAdded] = useState(false)
+  const pricing = usePricing(product ? [product.id] : [])
 
   useEffect(() => {
     // si cambia la sesión mientras carga, se descarta el resultado viejo (evita mostrar "sin variantes")
@@ -56,7 +58,13 @@ export default function ProductPage() {
     )
 
   const totalSel = variants.reduce((s, v) => s + (parseInt(qty[v.id] || '0') || 0), 0)
-  const selTotal = variants.reduce((s, v) => s + (parseInt(qty[v.id] || '0') || 0) * Number(v.price), 0)
+  // cantidad del producto contando lo que ya está en el pedido (para las escalas por cantidad)
+  const inCart = cart.items.filter((i) => i.product_id === product.id).reduce((s, i) => s + i.quantity, 0)
+  const productQty = totalSel + inCart
+  const tiers = pricing.tiersFor(product.id)
+  const pct = pricing.discountPct(product.id, Math.max(productQty, 1))
+  const finalPrice = (v: Variant) => pricing.unitPrice(Number(v.price), product.id, Math.max(productQty, 1))
+  const selTotal = variants.reduce((s, v) => s + (parseInt(qty[v.id] || '0') || 0) * finalPrice(v), 0)
 
   const addAll = () => {
     for (const v of variants) {
@@ -114,6 +122,17 @@ export default function ProductPage() {
           </dl>
         )}
         {product.min_qty > 1 && <p className="mt-3 text-sm text-stone-600">Pedido mínimo: {fmtNum(product.min_qty)} unidades (sumando variantes).</p>}
+        {canBuy && (tiers.length > 0 || pricing.clientPct > 0) && (
+          <div className="mt-4 rounded-xl border border-leather-500/30 bg-cream-100 p-3 text-sm">
+            {tiers.length > 0 && (
+              <div>
+                <span className="font-medium text-brand-900">Comprando más, pagás menos:</span>{' '}
+                {tiers.map((t) => `desde ${fmtNum(t.min_qty)} u. −${Number(t.pct)}%`).join(' · ')}
+              </div>
+            )}
+            {pricing.clientPct > 0 && <div className="text-brand-900">Tenés un descuento de cliente del {pricing.clientPct}%.</div>}
+          </div>
+        )}
 
         <div className="mt-6">
           {!profile ? (
@@ -141,7 +160,10 @@ export default function ProductPage() {
                     <div key={v.id} className="flex items-center gap-3 p-3">
                       <div className="min-w-0 flex-1">
                         <div className="font-medium">{v.label || 'Única'}</div>
-                        <div className="text-sm text-stone-600">{fmtMoney(v.price)} <span className="text-xs text-stone-400">c/u</span></div>
+                        <div className="text-sm text-stone-600">
+                          {pct > 0 && <span className="mr-1 text-xs text-stone-400 line-through">{fmtMoney(v.price)}</span>}
+                          {fmtMoney(finalPrice(v))} <span className="text-xs text-stone-400">c/u</span>
+                        </div>
                       </div>
                       <div className="flex items-center rounded-lg border border-stone-300 bg-white">
                         <button type="button" aria-label="Restar 10" className="px-3 py-2 text-lg text-stone-500 disabled:opacity-30" disabled={q <= 0} onClick={() => setQ(Math.max(0, q - 10))}>−</button>

@@ -4,6 +4,7 @@ import { appUrl, errMsg, imageUrl, supabase } from '../../lib/supabase'
 import { useAuth } from '../../lib/auth'
 import { useCart } from '../../lib/cart'
 import { addDays, fmtMoney, fmtNum, toISODate } from '../../lib/format'
+import { usePricing } from '../../lib/pricing'
 import { Alert, Button, Empty, Field, PageHeader } from '../../components/ui'
 
 export default function Cart() {
@@ -14,6 +15,11 @@ export default function Cart() {
   const [notes, setNotes] = useState('')
   const [error, setError] = useState('')
   const [busy, setBusy] = useState(false)
+  const pricing = usePricing([...new Set(cart.items.map((i) => i.product_id))])
+  const productQty = (pid: string) => cart.items.filter((i) => i.product_id === pid).reduce((s, i) => s + i.quantity, 0)
+  const unit = (i: (typeof cart.items)[number]) => pricing.unitPrice(i.price, i.product_id, productQty(i.product_id))
+  const total = cart.items.reduce((s, i) => s + unit(i) * i.quantity, 0)
+  const listTotal = cart.total
 
   const submit = async () => {
     setBusy(true)
@@ -51,7 +57,7 @@ export default function Cart() {
                 </div>
                 <div className="min-w-0 flex-1">
                   <div className="truncate font-medium">{i.product_name}</div>
-                  <div className="text-sm text-stone-500">{i.label || 'Única'} · {fmtMoney(i.price)} c/u</div>
+                  <div className="text-sm text-stone-500">{i.label || 'Única'} · {unit(i) < i.price && <span className="mr-1 text-xs line-through">{fmtMoney(i.price)}</span>}{fmtMoney(unit(i))} c/u</div>
                 </div>
                 <input
                   type="number"
@@ -60,7 +66,7 @@ export default function Cart() {
                   value={i.quantity}
                   onChange={(e) => cart.setQty(i.variant_id, parseInt(e.target.value) || 1)}
                 />
-                <div className="hidden w-28 text-right font-medium sm:block">{fmtMoney(i.price * i.quantity)}</div>
+                <div className="hidden w-28 text-right font-medium sm:block">{fmtMoney(unit(i) * i.quantity)}</div>
                 <button onClick={() => cart.remove(i.variant_id)} className="px-1 text-stone-400 hover:text-red-600" aria-label="Quitar">
                   ✕
                 </button>
@@ -68,7 +74,10 @@ export default function Cart() {
             ))}
             <div className="flex justify-between bg-stone-50 p-4">
               <span className="text-stone-600">{fmtNum(cart.count)} unidades</span>
-              <span className="text-lg font-semibold">{fmtMoney(cart.total)}</span>
+              <span className="text-right">
+                {total < listTotal && <span className="block text-xs text-emerald-700">Ahorrás {fmtMoney(listTotal - total)}</span>}
+                <span className="text-lg font-semibold">{fmtMoney(total)}</span>
+              </span>
             </div>
           </div>
 

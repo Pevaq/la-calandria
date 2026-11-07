@@ -15,6 +15,7 @@ export default function MyOrders() {
       .from('orders')
       .select('*')
       .eq('client_id', profile.id)
+      .eq('kind', 'cliente')
       .order('created_at', { ascending: false })
       .then(({ data }) => setOrders((data as Order[]) ?? []))
   }, [profile])

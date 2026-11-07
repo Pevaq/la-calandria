@@ -4,6 +4,9 @@ import { errMsg, supabase } from '../../lib/supabase'
 import { addDays, fmtDate, fmtDay, fmtMoney, fmtNum, STATUS_LABEL, toISODate, todayISO } from '../../lib/format'
 import type { Order, OrderItem, OrderStatus, Profile, Settings, Task } from '../../lib/types'
 import { personName, useStaff } from '../../lib/data'
+import { clientMessage, notifyClientByMail, whatsappLink, type ClientEvent } from '../../lib/notify'
+import Payments from '../../components/Payments'
+import EditOrderModal from './EditOrderModal'
 import { Alert, Button, Field, Modal, Progress, Spinner, StatusBadge } from '../../components/ui'
 
 export default function OrderDetail() {
@@ -18,6 +21,9 @@ export default function OrderDetail() {
   const [msg, setMsg] = useState('')
   const [confirmOpen, setConfirmOpen] = useState(false)
   const [adminNotes, setAdminNotes] = useState('')
+  const [editOpen, setEditOpen] = useState(false)
+  // después de un cambio de estado, ofrecer avisarle al cliente por WhatsApp
+  const [notice, setNotice] = useState<ClientEvent | null>(null)
 
   const load = useCallback(async () => {
     const { data: o } = await supabase.from('orders').select('*').eq('id', id!).single()
@@ -48,19 +54,17 @@ export default function OrderDetail() {
     if (error) setError(errMsg(error))
     else {
       setMsg(ok)
-      load()
+      await load()
     }
   }
 
-  const setStatus = (s: OrderStatus) =>
-    run(() => supabase.from('orders').update({ status: s, updated_at: new Date().toISOString() }).eq('id', order.id), `Estado: ${STATUS_LABEL[s]}`)
-  const togglePaid = () =>
-    run(async () => {
-      const r = await supabase.from('orders').update({ payment_received: !order.payment_received }).eq('id', order.id)
-      if (r.error || order.payment_received) return r
-      // sólo avanza el estado si todavía estaba en "recibido" (chequeado en la base, no en pantalla)
-      return supabase.from('orders').update({ status: 'pago_confirmado' }).eq('id', order.id).eq('status', 'recibido')
-    }, order.payment_received ? 'Pago desmarcado' : 'Pago registrado')
+  const setStatus = async (s: OrderStatus) => {
+    await run(() => supabase.from('orders').update({ status: s, updated_at: new Date().toISOString() }).eq('id', order.id), `Estado: ${STATUS_LABEL[s]}`)
+    if (order.kind === 'cliente' && (s === 'listo' || s === 'entregado')) {
+      setNotice(s)
+      notifyClientByMail(order.id, s)
+    }
+  }
   const cancel = () => {
     if (!confirm('¿Cancelar el pedido? Se devuelve el stock usado y se borran sus tareas.')) return
     run(() => supabase.rpc('cancel_order', { p_order_id: order.id }), 'Pedido cancelado')
@@ -78,19 +82,39 @@ export default function OrderDetail() {
   const pct = tq > 0 ? Math.round((td / tq) * 100) : 0
   const phone = client?.phone?.replace(/\D/g, '')
   const active = order.status !== 'cancelado'
+  const isStock = order.kind === 'stock'
+  const canEdit = !isStock && active && order.status !== 'entregado'
 
   return (
     <div className="max-w-5xl">
       <Link to="/admin" className="mb-2 inline-flex items-center gap-1 py-1 text-sm text-stone-500 hover:text-stone-800">← Pedidos</Link>
       <div className="mb-4 flex items-start justify-between gap-3">
         <div className="min-w-0">
-          <h1 className="font-display text-2xl font-semibold sm:text-3xl">Pedido #{order.number}</h1>
-          <p className="truncate text-sm text-stone-500">{client?.company || personName(client)} · {fmtNum(totalUnits)} u. · {fmtDate(order.created_at)}</p>
+          <h1 className="font-display text-2xl font-semibold sm:text-3xl">{isStock ? 'Producción' : 'Pedido'} #{order.number}</h1>
+          <p className="truncate text-sm text-stone-500">
+            {isStock ? 'Para stock' : client?.company || personName(client)} · {fmtNum(totalUnits)} u. · {fmtDate(order.created_at)}
+          </p>
         </div>
-        <StatusBadge status={order.status} />
+        <div className="flex shrink-0 flex-col items-end gap-2">
+          {isStock && order.status === 'entregado' ? <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-xs font-medium text-emerald-800">Sumado al stock</span> : <StatusBadge status={order.status} />}
+          {canEdit && <Button size="sm" variant="secondary" onClick={() => setEditOpen(true)}>Editar pedido</Button>}
+        </div>
       </div>
       {error && <div className="mb-4"><Alert>{error}</Alert></div>}
       {msg && <div className="mb-4"><Alert kind="success">{msg}</Alert></div>}
+      {notice && client && (
+        <div className="mb-4 flex flex-wrap items-center justify-between gap-2 rounded-xl border border-emerald-200 bg-emerald-50 p-3 text-sm">
+          <span className="text-emerald-900">¿Le avisás a {client.company || personName(client)}?</span>
+          <div className="flex gap-2">
+            {whatsappLink(client.phone, clientMessage(order, client, notice)) && (
+              <a className="rounded-lg bg-emerald-600 px-3 py-1.5 font-medium text-white" target="_blank" rel="noreferrer" href={whatsappLink(client.phone, clientMessage(order, client, notice))!} onClick={() => setNotice(null)}>
+                Avisar por WhatsApp
+              </a>
+            )}
+            <button className="px-2 text-stone-500" onClick={() => setNotice(null)}>Ahora no</button>
+          </div>
+        </div>
+      )}
 
       <div className="grid gap-4 lg:grid-cols-3 lg:items-start lg:gap-6">
         {/* Columna lateral (en celular va primero): próximo paso, pago, cliente */}
@@ -124,27 +148,26 @@ export default function OrderDetail() {
             </div>
           )}
 
-          <div className="card flex items-center justify-between gap-3 p-4">
-            <div>
-              <div className="text-sm text-stone-500">Pago · {fmtMoney(order.total)}</div>
-              {order.payment_received ? <div className="font-medium text-emerald-700">Recibido ✓</div> : <div className="font-medium text-amber-700">Pendiente</div>}
+          {isStock ? (
+            <div className="card p-4 text-sm text-stone-600">
+              {order.status === 'entregado'
+                ? 'Esta producción ya se sumó al stock.'
+                : 'Cuando se terminen todas las tareas, lo producido se suma solo al stock.'}
+              {order.notes && <div className="mt-2 rounded-lg bg-stone-50 p-2 text-stone-700">“{order.notes}”</div>}
             </div>
-            {active && (
-              <Button variant={order.payment_received ? 'ghost' : 'secondary'} size={order.payment_received ? 'sm' : 'md'} onClick={togglePaid}>
-                {order.payment_received ? 'Desmarcar' : 'Marcar pagado'}
-              </Button>
-            )}
-          </div>
+          ) : (
+          <>
+          {active && <Payments order={order} admin onChange={load} onPaid={async (amount) => { await load(); setNotice('pago'); notifyClientByMail(order.id, 'pago', amount) }} />}
 
           <div className="card p-4 text-sm">
-            <div className="font-medium">{client?.company || personName(client)}</div>
+            <Link to={`/admin/clientes/${order.client_id}`} className="font-medium text-brand-700 underline-offset-2 hover:underline">{client?.company || personName(client)}</Link>
             <div className="text-stone-500">
               {[client?.company ? client.full_name : null, client?.city, client?.cuit && `CUIT ${client.cuit}`].filter(Boolean).join(' · ')}
             </div>
             {client?.address && <div className="text-stone-500">{client.address}</div>}
             <div className="mt-3 grid grid-cols-3 gap-2">
               {phone && (
-                <a href={`https://wa.me/${phone}?text=${encodeURIComponent(`Hola! Te escribo por el pedido #${order.number}`)}`} target="_blank" rel="noreferrer" className="rounded-lg bg-emerald-600 py-2 text-center font-medium text-white">WhatsApp</a>
+                <a href={whatsappLink(phone, clientMessage(order, client, 'estado'))!} target="_blank" rel="noreferrer" className="rounded-lg bg-emerald-600 py-2 text-center font-medium text-white">WhatsApp</a>
               )}
               {phone && <a href={`tel:${phone}`} className="rounded-lg border border-stone-300 py-2 text-center font-medium">Llamar</a>}
               {client?.email && <a href={`mailto:${client.email}?subject=${encodeURIComponent(`Pedido #${order.number}`)}`} className="rounded-lg border border-stone-300 py-2 text-center font-medium">Mail</a>}
@@ -154,6 +177,8 @@ export default function OrderDetail() {
               {order.notes && <div className="rounded-lg bg-stone-50 p-2 text-stone-700">“{order.notes}”</div>}
             </div>
           </div>
+          </>
+          )}
         </div>
 
         {/* Columna principal: productos y trabajo */}
@@ -165,17 +190,20 @@ export default function OrderDetail() {
                   <div className="font-medium">{i.product_name}</div>
                   <div className="text-xs text-stone-500">{i.variant_label}</div>
                   <div className="mt-0.5 text-sm text-stone-600">
-                    {fmtNum(i.quantity)} × {fmtMoney(i.unit_price)}
+                    {isStock ? `${fmtNum(i.quantity)} u.` : <>{fmtNum(i.quantity)} × {fmtMoney(i.unit_price)}</>}
+                    {Number(i.discount_pct) > 0 && <span className="ml-1 text-xs text-emerald-700">(−{Number(i.discount_pct)}%)</span>}
                     {i.qty_from_stock > 0 && <span className="ml-1 text-emerald-700">· {fmtNum(i.qty_from_stock)} de stock</span>}
                   </div>
                 </div>
-                <div className="whitespace-nowrap font-medium">{fmtMoney(i.unit_price * i.quantity)}</div>
+                {!isStock && <div className="whitespace-nowrap font-medium">{fmtMoney(i.unit_price * i.quantity)}</div>}
               </div>
             ))}
-            <div className="flex justify-between bg-stone-50 p-3 sm:p-4">
-              <span className="font-medium">Total</span>
-              <span className="font-semibold">{fmtMoney(order.total)}</span>
-            </div>
+            {!isStock && (
+              <div className="flex justify-between bg-stone-50 p-3 sm:p-4">
+                <span className="font-medium">Total</span>
+                <span className="font-semibold">{fmtMoney(order.total)}</span>
+              </div>
+            )}
           </div>
 
           <div>
@@ -237,9 +265,25 @@ export default function OrderDetail() {
         onClose={() => setConfirmOpen(false)}
         order={order}
         defaultDays={settings?.default_lead_days ?? 14}
-        onDone={(n) => {
+        onDone={async (n) => {
           setConfirmOpen(false)
           setMsg(`Pedido confirmado. Se generaron ${n} tareas.`)
+          await load() // primero recargar: el aviso usa la fecha de entrega ya confirmada
+          if (!isStock) {
+            setNotice('confirmado')
+            notifyClientByMail(order.id, 'confirmado')
+          }
+        }}
+      />
+      <EditOrderModal
+        open={editOpen}
+        onClose={() => setEditOpen(false)}
+        order={order}
+        items={items}
+        doneUnits={td}
+        onSaved={(replanned) => {
+          setEditOpen(false)
+          setMsg(replanned ? 'Pedido actualizado. Volvé a confirmarlo para generar el trabajo de nuevo.' : 'Pedido actualizado.')
           load()
         }}
       />

@@ -14,6 +14,7 @@ export interface Profile {
   address: string | null
   approved: boolean
   active: boolean
+  discount_pct: number
   created_at: string
 }
 
@@ -29,6 +30,7 @@ export interface Settings {
   notify_email: string | null
   payment_instructions: string | null
   default_lead_days: number
+  notify_clients: boolean
 }
 
 export interface Product {
@@ -108,6 +110,8 @@ export interface Order {
   notes: string | null
   admin_notes: string | null
   total: number
+  paid_amount: number
+  kind: 'cliente' | 'stock'
   payment_received: boolean
   created_at: string
   confirmed_at: string | null
@@ -120,6 +124,9 @@ export interface OrderItem {
   product_name: string
   variant_label: string
   unit_price: number
+  list_price: number | null
+  discount_pct: number
+  part_id: string | null
   quantity: number
   qty_from_stock: number
 }
@@ -140,4 +147,25 @@ export interface Task {
   status: TaskStatus
   created_at: string
   completed_at: string | null
+}
+
+export type PaymentStatus = 'informado' | 'confirmado' | 'rechazado'
+export interface Payment {
+  id: string
+  order_id: string
+  amount: number
+  status: PaymentStatus
+  method: string
+  note: string | null
+  receipt_path: string | null
+  created_by: string | null
+  created_at: string
+  reviewed_at: string | null
+}
+
+export interface ProductDiscount {
+  id: string
+  product_id: string
+  min_qty: number
+  pct: number
 }

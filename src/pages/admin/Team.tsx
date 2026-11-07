@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
+import { Link } from 'react-router-dom'
 import { errMsg, supabase } from '../../lib/supabase'
 import { useAuth } from '../../lib/auth'
 import { fmtDate } from '../../lib/format'
@@ -100,7 +101,8 @@ export default function Team() {
               {[...pending, ...clients.filter((c) => !pending.includes(c))].map((c) => (
                 <div key={c.id} className={`flex flex-wrap items-center gap-x-3 gap-y-2 p-4 ${c.active ? '' : 'opacity-50'} ${!c.approved && c.active ? 'bg-amber-50' : ''}`}>
                   <div className="w-full min-w-0 sm:w-auto sm:flex-1">
-                    <div className="font-medium">{c.company || personName(c)}</div>
+                    <Link to={`/admin/clientes/${c.id}`} className="font-medium text-brand-700 hover:underline">{c.company || personName(c)}</Link>
+                    {Number(c.discount_pct) > 0 && <span className="ml-2 text-xs text-emerald-700">−{Number(c.discount_pct)}%</span>}
                     <div className="text-xs text-stone-500">
                       {[c.full_name, c.phone, c.email, c.city, c.cuit && `CUIT ${c.cuit}`].filter(Boolean).join(' · ')}
                     </div>

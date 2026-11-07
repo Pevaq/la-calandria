@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { imageUrl, supabase } from '../../lib/supabase'
 import { useAuth } from '../../lib/auth'
 import { fmtMoney } from '../../lib/format'
+import { usePricing } from '../../lib/pricing'
 import type { Product, ProductImage, Variant } from '../../lib/types'
 import { Alert, BIRD_URL, Empty, Spinner } from '../../components/ui'
 
@@ -12,6 +13,7 @@ export default function Catalog() {
   const [images, setImages] = useState<ProductImage[]>([])
   const [variants, setVariants] = useState<Variant[]>([])
   const [cat, setCat] = useState<string>('')
+  const pricing = usePricing((products ?? []).map((p) => p.id))
 
   useEffect(() => {
     let alive = true
@@ -99,7 +101,7 @@ export default function Catalog() {
                 <div className="mt-2">
                   {p.category && <div className="text-xs uppercase tracking-wide text-stone-500">{p.category}</div>}
                   <div className="font-medium text-stone-900 group-hover:text-brand-700">{p.name}</div>
-                  {canBuy && min !== null && <div className="text-sm text-stone-600">desde {fmtMoney(min)}</div>}
+                  {canBuy && min !== null && <div className="text-sm text-stone-600">desde {fmtMoney(pricing.unitPrice(min, p.id, 1))}</div>}
                 </div>
               </Link>
             )

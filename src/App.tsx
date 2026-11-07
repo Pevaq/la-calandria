@@ -17,6 +17,8 @@ import Parts from './pages/admin/Parts'
 import Team from './pages/admin/Team'
 import Planning from './pages/admin/Planning'
 import SettingsPage from './pages/admin/Settings'
+import ClientPage from './pages/admin/ClientPage'
+import Reports from './pages/admin/Reports'
 import MyWeek from './pages/worker/MyWeek'
 
 export default function App() {
@@ -41,6 +43,8 @@ export default function App() {
         <Route path="productos/:id" element={<ProductEditor />} />
         <Route path="partes" element={<Parts />} />
         <Route path="equipo" element={<Team />} />
+        <Route path="clientes/:id" element={<ClientPage />} />
+        <Route path="reportes" element={<Reports />} />
         <Route path="configuracion" element={<SettingsPage />} />
       </Route>
 

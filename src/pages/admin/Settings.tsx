@@ -42,6 +42,7 @@ export default function SettingsPage() {
         notify_email: clean(f.notify_email),
         payment_instructions: clean(f.payment_instructions),
         default_lead_days: Math.max(1, parseInt(f.default_lead_days) || 14),
+        notify_clients: !!f.notify_clients,
         updated_at: new Date().toISOString(),
       })
       .eq('id', 1)
@@ -76,6 +77,13 @@ export default function SettingsPage() {
           <section className="card grid gap-4 p-5">
             <h2 className="font-medium">Avisos y producción</h2>
             <Field label="Email donde llegan los pedidos nuevos"><input type="email" className="input" value={v('notify_email')} onChange={set('notify_email')} /></Field>
+            <label className="flex items-start gap-3 rounded-lg border border-stone-200 p-3 text-sm">
+              <input type="checkbox" className="mt-0.5 h-5 w-5 accent-brand-700" checked={!!f.notify_clients} onChange={(e) => setF({ ...f, notify_clients: e.target.checked })} />
+              <span>
+                <span className="font-medium">Avisar a los clientes por mail</span> cuando se confirma su pedido, se registra un pago, está listo o se entrega.
+                <span className="mt-1 block text-xs text-stone-500">Necesita Resend con un dominio propio verificado. Mientras tanto, después de cada cambio la app te ofrece avisar por WhatsApp.</span>
+              </span>
+            </label>
             <Field label="Días de entrega por defecto" hint="Si el cliente no pide fecha, se propone hoy + estos días."><input type="number" min={1} className="input" value={f.default_lead_days} onChange={set('default_lead_days')} /></Field>
             <Field label="Nombre del negocio"><input className="input" value={f.business_name} onChange={set('business_name')} /></Field>
           </section>
