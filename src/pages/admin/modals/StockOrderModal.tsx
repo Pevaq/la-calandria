@@ -1,9 +1,9 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { errMsg, supabase } from '../../lib/supabase'
-import { addDays, fmtNum, toISODate } from '../../lib/format'
-import type { Part, Product, Variant } from '../../lib/types'
-import { Alert, Button, Field, Modal, Tabs } from '../../components/ui'
+import { errMsg, supabase } from '../../../lib/supabase'
+import { addDays, fmtNum, toISODate } from '../../../lib/format'
+import type { Part, Product, Variant } from '../../../lib/types'
+import { Alert, Button, Field, Modal, Tabs } from '../../../components/ui'
 
 /** Orden de producción interna: lo que se termina se suma solo al stock */
 export default function StockOrderModal({ open, onClose }: { open: boolean; onClose: () => void }) {

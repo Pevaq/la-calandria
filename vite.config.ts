@@ -6,5 +6,4 @@ import tailwindcss from '@tailwindcss/vite'
 export default defineConfig({
   base: process.env.BASE_PATH || '/',
   plugins: [react(), tailwindcss()],
-  define: { __BUILD_DATE__: JSON.stringify(new Date().toISOString()) },
 })

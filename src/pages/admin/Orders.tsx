@@ -5,8 +5,8 @@ import { fmtDate, fmtMoney, STATUS_LABEL, todayISO } from '../../lib/format'
 import type { Order, OrderStatus, Profile, Task } from '../../lib/types'
 import { Badge, Button, Empty, Icon, PageHeader, Spinner, StatusBadge } from '../../components/ui'
 import { personName } from '../../lib/data'
-import NewOrderModal from './NewOrderModal'
-import StockOrderModal from './StockOrderModal'
+import NewOrderModal from './modals/NewOrderModal'
+import StockOrderModal from './modals/StockOrderModal'
 
 type Filter = 'activos' | OrderStatus | 'stock' | 'todos'
 

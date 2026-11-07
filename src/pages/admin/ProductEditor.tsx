@@ -5,7 +5,7 @@ import { fmtNum, slugify } from '../../lib/format'
 import { personName, useStaff } from '../../lib/data'
 import type { Attribute, AttrOption, Part, PartProcess, Product, ProductDiscount, ProductImage, ProductPart, ProductProcess, Variant } from '../../lib/types'
 import { Alert, Button, Empty, Field, Icon, Modal, PageHeader, Spinner, Tabs } from '../../components/ui'
-import StockAdjustModal from './StockAdjustModal'
+import StockAdjustModal from './modals/StockAdjustModal'
 
 type Tab = 'datos' | 'fotos' | 'variantes' | 'partes' | 'procesos'
 

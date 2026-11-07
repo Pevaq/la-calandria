@@ -86,7 +86,11 @@ body {
 .manual details > ul, .manual details > ol { padding-left: 2.4rem; }
 .manual details > *:last-child { padding-bottom: 0.4rem; }
 
+/* sólo aparece al imprimir / guardar como PDF */
+.print-only { display: none; }
+
 @media print {
+  .print-only { display: block !important; }
   .no-print, header, footer, aside, nav.fixed, .lg\:hidden.sticky { display: none !important; }
   body { background: #fff !important; }
   main { padding: 0 !important; }

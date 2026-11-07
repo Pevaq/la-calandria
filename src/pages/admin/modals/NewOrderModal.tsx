@@ -1,10 +1,10 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { errMsg, supabase } from '../../lib/supabase'
-import { fmtMoney } from '../../lib/format'
-import type { Product, Profile, Variant } from '../../lib/types'
-import { Alert, Button, Field, Modal } from '../../components/ui'
-import { personName } from '../../lib/data'
+import { errMsg, supabase } from '../../../lib/supabase'
+import { fmtMoney } from '../../../lib/format'
+import type { Product, Profile, Variant } from '../../../lib/types'
+import { Alert, Button, Field, Modal } from '../../../components/ui'
+import { personName } from '../../../lib/data'
 
 /** Para cargar a mano un pedido que llegó por WhatsApp o teléfono */
 export default function NewOrderModal({ open, onClose, onCreated }: { open: boolean; onClose: () => void; onCreated: () => void }) {

@@ -19,16 +19,11 @@ La lógica importante vive en la base (Postgres) y está protegida por rol:
 - `supabase/migrations/` — tablas, funciones (`place_order`, `confirm_order`, `cancel_order`, `report_progress`, `adjust_stock`) y permisos (RLS).
 - `supabase/functions/notify-order` — manda el mail al dueño cuando entra un pedido.
 - `supabase/functions/admin-users` — alta de trabajadores/clientes y cambio de contraseña (sólo admin).
+- `supabase/functions/notify-client` — avisos por mail al cliente (opcional).
 
 ## Manuales y ayuda
 
-Los manuales de uso están en `docs/manual/` y se muestran en la web (sección **Ayuda**), con botón para descargar en PDF:
-
-- `clientes.md` → `/ayuda` (cómo comprar + preguntas frecuentes, público)
-- `equipo.md` → `/trabajo/ayuda`
-- `dueno.md` → `/admin/ayuda` (el dueño ve los tres)
-
-**Cada cambio de funcionalidad actualiza estos manuales en el mismo commit** (ver `CLAUDE.md`). Lo pendiente está en `docs/DEUDA_TECNICA.md`.
+Los manuales de uso (dueño, equipo y ayuda para clientes) se ven en la web, sección **Ayuda**, con botón para descargar en PDF. Su contenido vive en la base de datos (tabla `docs`, con versiones), no en este repo: cada persona recibe solo los manuales de su rol. Las reglas para mantenerlos al día están en `CLAUDE.md`.
 
 ## Desarrollo local
 

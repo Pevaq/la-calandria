@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
-import { errMsg, supabase } from '../../lib/supabase'
-import { fmtNum } from '../../lib/format'
-import { Alert, Button, Field, Modal } from '../../components/ui'
+import { errMsg, supabase } from '../../../lib/supabase'
+import { fmtNum } from '../../../lib/format'
+import { Alert, Button, Field, Modal } from '../../../components/ui'
 
 export interface StockTarget {
   kind: 'part' | 'variant'

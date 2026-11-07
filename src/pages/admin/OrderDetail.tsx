@@ -6,7 +6,7 @@ import type { Order, OrderItem, OrderStatus, Profile, Settings, Task } from '../
 import { personName, useStaff } from '../../lib/data'
 import { clientMessage, notifyClientByMail, whatsappLink, type ClientEvent } from '../../lib/notify'
 import Payments from '../../components/Payments'
-import EditOrderModal from './EditOrderModal'
+import EditOrderModal from './modals/EditOrderModal'
 import { Alert, Button, Field, Modal, Progress, Spinner, StatusBadge } from '../../components/ui'
 
 export default function OrderDetail() {

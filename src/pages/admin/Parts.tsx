@@ -4,7 +4,7 @@ import { fmtDate, fmtNum } from '../../lib/format'
 import { personName, useStaff } from '../../lib/data'
 import type { Part, PartProcess, Product, ProductPart } from '../../lib/types'
 import { Alert, Button, Empty, Icon, PageHeader, Spinner, Tabs } from '../../components/ui'
-import StockAdjustModal, { type StockTarget } from './StockAdjustModal'
+import StockAdjustModal, { type StockTarget } from './modals/StockAdjustModal'
 
 interface Movement {
   id: string

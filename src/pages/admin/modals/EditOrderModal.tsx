@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react'
-import { errMsg, supabase } from '../../lib/supabase'
-import { fmtMoney, fmtNum } from '../../lib/format'
-import type { Order, OrderItem, Product, Variant } from '../../lib/types'
-import { Alert, Button, Icon, Modal } from '../../components/ui'
+import { errMsg, supabase } from '../../../lib/supabase'
+import { fmtMoney, fmtNum } from '../../../lib/format'
+import type { Order, OrderItem, Product, Variant } from '../../../lib/types'
+import { Alert, Button, Icon, Modal } from '../../../components/ui'
 
 interface Row {
   variant_id: string
