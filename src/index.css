@@ -55,3 +55,49 @@ body {
 
 /* la tipografía de la marca tiene un solo grosor: sin negrita artificial */
 .font-display { font-synthesis: none; letter-spacing: 0.01em; }
+
+/* ---------------------------------------------------------------
+   Manuales (Ayuda): markdown de docs/manual/*.md
+   --------------------------------------------------------------- */
+.manual { color: #1c2230; line-height: 1.65; font-size: 0.97rem; }
+.manual h1 { font-family: var(--font-display); font-size: 2rem; line-height: 1.15; margin: 0 0 1rem; color: var(--color-brand-800); }
+.manual h2 { font-family: var(--font-display); font-size: 1.45rem; margin: 2.4rem 0 0.75rem; color: var(--color-brand-800); scroll-margin-top: 5rem; }
+.manual h3 { font-weight: 600; font-size: 1.05rem; margin: 1.6rem 0 0.5rem; scroll-margin-top: 5rem; }
+.manual p { margin: 0.6rem 0; }
+.manual ul, .manual ol { margin: 0.6rem 0; padding-left: 1.4rem; }
+.manual ul { list-style: disc; }
+.manual ol { list-style: decimal; }
+.manual li { margin: 0.3rem 0; }
+.manual li::marker { color: var(--color-brand-500); }
+.manual a { color: var(--color-brand-700); text-decoration: underline; text-underline-offset: 2px; word-break: break-word; }
+.manual strong { font-weight: 600; color: #11161f; }
+.manual blockquote { margin: 0.8rem 0; padding: 0.75rem 1rem; border-left: 3px solid var(--color-leather-500); background: var(--color-cream-100); border-radius: 0 0.6rem 0.6rem 0; }
+.manual blockquote p { margin: 0; }
+.manual table { width: 100%; border-collapse: collapse; margin: 0.8rem 0; font-size: 0.9rem; display: block; overflow-x: auto; }
+.manual th, .manual td { border-bottom: 1px solid #e7e5e4; padding: 0.5rem 0.6rem; text-align: left; vertical-align: top; }
+.manual th { background: #fafaf9; font-weight: 600; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.03em; color: #57534e; }
+.manual details { border: 1px solid #e7e5e4; background: #fff; border-radius: 0.75rem; margin: 0.5rem 0; }
+.manual summary { cursor: pointer; padding: 0.8rem 2.5rem 0.8rem 1rem; font-weight: 500; position: relative; list-style: none; }
+.manual summary::-webkit-details-marker { display: none; }
+.manual summary::after { content: '+'; position: absolute; right: 1rem; top: 50%; transform: translateY(-50%); font-size: 1.2rem; color: var(--color-brand-600); }
+.manual details[open] summary::after { content: '−'; }
+.manual details[open] summary { border-bottom: 1px solid #f0efed; }
+.manual details > *:not(summary) { padding: 0 1rem; }
+.manual details > ul, .manual details > ol { padding-left: 2.4rem; }
+.manual details > *:last-child { padding-bottom: 0.4rem; }
+
+@media print {
+  .no-print, header, footer, aside, nav.fixed, .lg\:hidden.sticky { display: none !important; }
+  body { background: #fff !important; }
+  main { padding: 0 !important; }
+  .pb-nav { padding-bottom: 0 !important; }
+  .manual { font-size: 11pt; }
+  .manual h2 { break-after: avoid; }
+  .manual details { border: none; break-inside: avoid; }
+  .manual summary { padding: 0.4rem 0 0.2rem; font-weight: 600; }
+  .manual details summary::after, .manual details[open] summary::after { content: none; }
+  .manual details[open] summary { border-bottom: none; }
+  .manual details > *:not(summary) { padding: 0; }
+  .manual details > ul, .manual details > ol { padding-left: 1.4rem; }
+  .manual a { color: inherit; }
+}

@@ -27,6 +27,7 @@ export function PublicLayout() {
           {/* escritorio */}
           <nav className="hidden items-center gap-2 text-sm lg:flex">
             <NavLink to="/" end className={top}>Catálogo</NavLink>
+            <NavLink to="/ayuda" className={top}>Ayuda</NavLink>
             {profile && <NavLink to="/mis-pedidos" className={top}>Mis pedidos</NavLink>}
             {isStaff && <Link to={homeFor(profile)} className="rounded-md px-2 py-1.5 text-stone-600 hover:text-stone-900">Panel</Link>}
             <Link to="/pedido" className="rounded-lg bg-brand-700 px-3 py-1.5 font-medium text-white hover:bg-brand-800">
@@ -54,7 +55,7 @@ export function PublicLayout() {
       <footer className="hidden border-t border-stone-200 bg-brand-900 py-8 text-sm text-cream-100/80 lg:block">
         <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-3 px-4">
           <Logo light />
-          <span>Venta mayorista · Pergamino y Rosario</span>
+          <span>Venta mayorista · Pergamino y Rosario · <Link to="/ayuda" className="underline">Ayuda y preguntas frecuentes</Link></span>
         </div>
       </footer>
 
@@ -63,6 +64,7 @@ export function PublicLayout() {
           { to: '/', end: true, label: 'Catálogo', icon: 'store' },
           { to: '/pedido', end: true, label: 'Pedido', icon: 'cart', badge: count },
           ...(profile ? [{ to: '/mis-pedidos', label: 'Mis pedidos', icon: 'orders' }] : []),
+          { to: '/ayuda', label: 'Ayuda', icon: 'help' },
           profile
             ? { onClick: () => setAccount(true), label: 'Cuenta', icon: 'user', active: account }
             : { to: '/ingresar', label: 'Ingresar', icon: 'user' },
@@ -117,6 +119,7 @@ const ADMIN_MORE = [
   { to: '/admin/partes', label: 'Partes y stock', icon: 'parts' },
   { to: '/admin/equipo', label: 'Equipo y clientes', icon: 'team' },
   { to: '/admin/configuracion', label: 'Configuración', icon: 'settings' },
+  { to: '/admin/ayuda', label: 'Ayuda', icon: 'help' },
   { to: '/', label: 'Ver tienda', icon: 'store' },
 ]
 
@@ -148,10 +151,15 @@ function StaffShell({ children }: { children: ReactNode }) {
     <div className="min-h-screen lg:flex">
       {/* celular: barra superior */}
       <div className="sticky top-0 z-30 flex items-center justify-between bg-brand-900 px-4 py-3 lg:hidden">
-        <Logo light />
+        <Logo light compact={!isAdmin && DEMO_LOGIN} />
         <div className="flex items-center gap-3">
           {DEMO_LOGIN && (
             <Link to="/demo" className="rounded-lg bg-leather-500 px-2.5 py-1 text-xs font-medium text-white">Cambiar usuario</Link>
+          )}
+          {!isAdmin && (
+            <Link to={loc.pathname.endsWith('/ayuda') ? '/trabajo' : '/trabajo/ayuda'} className="text-sm text-cream-100/80">
+              {loc.pathname.endsWith('/ayuda') ? 'Tareas' : 'Ayuda'}
+            </Link>
           )}
           {!isAdmin && (
             <button onClick={signOut} className="flex items-center gap-1.5 text-sm text-cream-100/80">
@@ -166,8 +174,8 @@ function StaffShell({ children }: { children: ReactNode }) {
         <div className="lg:sticky lg:top-0 lg:py-5">
           <div className="mb-6 px-2"><Logo light /></div>
           <nav className="space-y-1">
-            {(isAdmin ? [...ADMIN_MAIN, ...ADMIN_MORE] : [{ to: '/trabajo', label: 'Mis tareas', icon: 'check' }]).map((n) => (
-              <NavLink key={n.to} to={n.to} end={n.to === '/admin' || n.to === '/'} className={side}>
+            {(isAdmin ? [...ADMIN_MAIN, ...ADMIN_MORE] : [{ to: '/trabajo', label: 'Mis tareas', icon: 'check' }, { to: '/trabajo/ayuda', label: 'Ayuda', icon: 'help' }]).map((n) => (
+              <NavLink key={n.to} to={n.to} end={n.to === '/admin' || n.to === '/' || n.to === '/trabajo'} className={side}>
                 <Icon name={n.icon} className="h-4 w-4" /> {n.label}
                 {n.to === '/admin' && newOrders > 0 && <span className="ml-auto rounded-full bg-leather-500 px-1.5 text-xs text-white">{newOrders}</span>}
               </NavLink>

@@ -146,13 +146,13 @@ export function Tabs<T extends string>({ tabs, value, onChange }: { tabs: { id: 
 
 export const BIRD_URL = `${import.meta.env.BASE_URL}ave.png`
 
-export function Logo({ light }: { light?: boolean }) {
+export function Logo({ light, compact }: { light?: boolean; compact?: boolean }) {
   return (
     <span className="flex items-center gap-2.5">
       <span className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full ${light ? 'bg-cream-100/10 ring-1 ring-cream-100/30' : 'bg-brand-800'}`}>
         <img src={BIRD_URL} alt="" className="h-7 w-7" />
       </span>
-      <span className={`font-display text-xl leading-none tracking-wide ${light ? 'text-cream-100' : 'text-brand-800'}`}>La Calandria</span>
+      <span className={`whitespace-nowrap font-display text-xl leading-none tracking-wide ${light ? 'text-cream-100' : 'text-brand-800'} ${compact ? 'hidden sm:inline' : ''}`}>La Calandria</span>
     </span>
   )
 }
@@ -173,6 +173,8 @@ const ICONS: Record<string, string> = {
   logout: 'M17 16l4-4m0 0-4-4m4 4H7m6 4v1a3 3 0 0 1-3 3H6a3 3 0 0 1-3-3V7a3 3 0 0 1 3-3h4a3 3 0 0 1 3 3v1',
   plus: 'M12 5v14m-7-7h14',
   chart: 'M4 20V10m6 10V4m6 16v-7m4 7H2',
+  help: 'M9.1 9a3 3 0 0 1 5.8 1c0 2-3 3-3 3m.1 4h.01M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0z',
+  download: 'M4 16v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2m-8-12v12m0 0-4-4m4 4 4-4',
   phone: 'M3 5a2 2 0 0 1 2-2h3.3a1 1 0 0 1 1 .7l1.5 4.5a1 1 0 0 1-.5 1.2l-2.3 1.1a11 11 0 0 0 5.5 5.5l1.1-2.3a1 1 0 0 1 1.2-.5l4.5 1.5a1 1 0 0 1 .7 1V19a2 2 0 0 1-2 2h-1C9.7 21 3 14.3 3 6V5z',
   chevron: 'M9 5l7 7-7 7',
   trash: 'M19 7l-.9 12.1A2 2 0 0 1 16.1 21H7.9a2 2 0 0 1-2-1.9L5 7m5 4v6m4-6v6m1-10V4a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v3M4 7h16',

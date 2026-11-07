@@ -20,6 +20,16 @@ La lógica importante vive en la base (Postgres) y está protegida por rol:
 - `supabase/functions/notify-order` — manda el mail al dueño cuando entra un pedido.
 - `supabase/functions/admin-users` — alta de trabajadores/clientes y cambio de contraseña (sólo admin).
 
+## Manuales y ayuda
+
+Los manuales de uso están en `docs/manual/` y se muestran en la web (sección **Ayuda**), con botón para descargar en PDF:
+
+- `clientes.md` → `/ayuda` (cómo comprar + preguntas frecuentes, público)
+- `equipo.md` → `/trabajo/ayuda`
+- `dueno.md` → `/admin/ayuda` (el dueño ve los tres)
+
+**Cada cambio de funcionalidad actualiza estos manuales en el mismo commit** (ver `CLAUDE.md`). Lo pendiente está en `docs/DEUDA_TECNICA.md`.
+
 ## Desarrollo local
 
 ```bash

@@ -19,6 +19,7 @@ import Planning from './pages/admin/Planning'
 import SettingsPage from './pages/admin/Settings'
 import ClientPage from './pages/admin/ClientPage'
 import Reports from './pages/admin/Reports'
+import Help from './pages/Help'
 import MyWeek from './pages/worker/MyWeek'
 
 export default function App() {
@@ -30,6 +31,7 @@ export default function App() {
         <Route path="ingresar" element={<Login />} />
         <Route path="registro" element={<Register />} />
         {DEMO_LOGIN && <Route path="demo" element={<Demo />} />}
+        <Route path="ayuda" element={<Help available={['clientes']} />} />
         <Route path="pedido" element={<Cart />} />
         <Route path="pedido/:id" element={<RequireRole roles={['client', 'admin', 'worker']}><OrderView /></RequireRole>} />
         <Route path="mis-pedidos" element={<RequireRole roles={['client', 'admin', 'worker']}><MyOrders /></RequireRole>} />
@@ -45,11 +47,13 @@ export default function App() {
         <Route path="equipo" element={<Team />} />
         <Route path="clientes/:id" element={<ClientPage />} />
         <Route path="reportes" element={<Reports />} />
+        <Route path="ayuda" element={<Help available={['dueno', 'equipo', 'clientes']} />} />
         <Route path="configuracion" element={<SettingsPage />} />
       </Route>
 
       <Route path="trabajo" element={<RequireRole roles={['admin', 'worker']}><WorkerLayout /></RequireRole>}>
         <Route index element={<MyWeek />} />
+        <Route path="ayuda" element={<Help available={['equipo']} />} />
       </Route>
 
       <Route path="*" element={<Navigate to="/" replace />} />
